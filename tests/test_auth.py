@@ -3,6 +3,25 @@ from fastapi.testclient import TestClient
 from app.config import Settings, get_settings
 
 
+def test_password_minimum_is_eight_characters_for_setup_and_invitation(client):
+    short = client.post("/api/setup/admin", json={"email": "owner@example.test", "password": "Test-12"})
+    assert short.status_code == 422
+    assert short.json()["detail"] == "密码至少需要 8 个字符"
+    assert client.get("/api/setup/status").json() == {"required": True}
+    created = client.post("/api/setup/admin", json={"email": "owner@example.test", "password": "Test-123"})
+    assert created.status_code == 201
+    invitation = client.post("/api/admin/invitations", json={"email": "member@example.test", "expires_in_hours": 24}).json()
+    client.post("/api/auth/logout")
+    short = client.post("/api/auth/register/invitation", json={"token": invitation["token"], "password": "Test-12"})
+    assert short.status_code == 422
+    registered = client.post("/api/auth/register/invitation", json={"token": invitation["token"], "password": "Test-123"})
+    assert registered.status_code == 201
+    client.post("/api/auth/logout")
+    for email in ["owner@example.test", "member@example.test"]:
+        assert client.post("/api/auth/login", json={"email": email, "password": "Test-123"}).status_code == 200
+        client.post("/api/auth/logout")
+
+
 def test_setup_then_invite_only_registration(client):
     assert client.get("/api/setup/status").json() == {"required": True}
 

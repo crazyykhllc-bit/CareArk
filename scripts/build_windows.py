@@ -16,10 +16,11 @@ def main() -> None:
     if sys.platform != "win32":
         raise SystemExit("Windows 安装包必须在 Windows 上构建")
     version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+    version_output = ROOT / "dist" / f"v{version}"
     separator = os.pathsep
     command = [
         sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--onedir", "--windowed",
-        "--name", "CareArk", "--distpath", str(ROOT / "dist"),
+        "--name", "CareArk", "--distpath", str(version_output),
         "--workpath", str(ROOT / "build"), "--specpath", str(ROOT / "build"),
         "--add-data", f"{ROOT / 'app' / 'web'}{separator}app/web",
         "--add-data", f"{ROOT / 'alembic'}{separator}alembic",
@@ -30,11 +31,11 @@ def main() -> None:
         str(ROOT / "desktop_launcher.py"),
     ]
     subprocess.run(command, cwd=ROOT, check=True)
-    output = ROOT / "dist" / "CareArk"
+    output = version_output / "CareArk"
     for name in ("LICENSE", "WINDOWS.md"):
         shutil.copy2(ROOT / name, output / name)
     archive = shutil.make_archive(str(ROOT / "dist" / f"CareArk-Windows-v{version}"), "zip",
-                                  root_dir=ROOT / "dist", base_dir="CareArk")
+                                  root_dir=version_output, base_dir="CareArk")
     with open(archive, "rb") as source:
         digest = hashlib.file_digest(source, "sha256").hexdigest()
     (ROOT / "dist" / "SHA256SUMS.txt").write_text(

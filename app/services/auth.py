@@ -17,8 +17,8 @@ def normalize_email(email: str) -> str:
 
 
 def validate_password(password: str) -> None:
-    if len(password) < 12:
-        raise HTTPException(422, "密码至少需要 12 个字符")
+    if len(password) < 8:
+        raise HTTPException(422, "密码至少需要 8 个字符")
 
 
 async def create_session(db: AsyncSession, user: User, settings: Settings) -> str:

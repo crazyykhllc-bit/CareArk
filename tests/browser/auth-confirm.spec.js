@@ -28,15 +28,15 @@ test('administrator setup compares both passwords before sending a request',asyn
   await expect(page.locator('.auth-copy h1')).toHaveText('把散落的医疗资料，整理成清晰的个人健康档案。');
   await expect(page.locator('#authConfirmLabel')).toBeVisible();
   await page.locator('#authEmail').fill('owner@example.test');
-  await page.locator('#authPassword').fill('Correct-Horse-42');
-  await page.locator('#authConfirmPassword').fill('Correct-Horse-43');
+  await page.locator('#authPassword').fill('Test-123');
+  await page.locator('#authConfirmPassword').fill('Test-124');
   await page.locator('#authPasswordVisibility').click();
   await expect(page.locator('#authPassword')).toHaveAttribute('type','text');
   await expect(page.locator('#authConfirmPassword')).toHaveAttribute('type','text');
   await page.locator('#authSubmit').click();
   await expect(page.locator('#authError')).toContainText('密码不一致');
   expect(submissions).toHaveLength(0);
-  await page.locator('#authConfirmPassword').fill('Correct-Horse-42');
+  await page.locator('#authConfirmPassword').fill('Test-123');
   await page.locator('#authSubmit').click();
   await expect.poll(()=>submissions.length).toBe(1);
   expect(submissions[0].pathname).toBe('/api/setup/admin');
@@ -49,14 +49,14 @@ test('invited account registration also requires a match; login does not',async(
   const submissions=await openAuth(page,{invite:true});
   await expect(page.locator('#authConfirmLabel')).toBeVisible();
   await expect(page.locator('#authEmail')).toHaveJSProperty('required',false);
-  await page.locator('#authPassword').fill('Correct-Horse-42');
-  await page.locator('#authConfirmPassword').fill('Different-Horse-42');
+  await page.locator('#authPassword').fill('Test-123');
+  await page.locator('#authConfirmPassword').fill('Test-124');
   await page.locator('#authSubmit').click();
   expect(submissions).toHaveLength(0);
-  await page.locator('#authConfirmPassword').fill('Correct-Horse-42');
+  await page.locator('#authConfirmPassword').fill('Test-123');
   await page.locator('#authSubmit').click();
   await expect.poll(()=>submissions.length).toBe(1);
-  expect(submissions[0]).toEqual({pathname:'/api/auth/register/invitation',body:{token:'sample-token',password:'Correct-Horse-42'}});
+  expect(submissions[0]).toEqual({pathname:'/api/auth/register/invitation',body:{token:'sample-token',password:'Test-123'}});
 });
 
 test('existing account login keeps a single password field',async({page})=>{

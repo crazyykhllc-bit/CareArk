@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 DEFAULT_MODEL_CONFIG = """# 视觉识别需要自行填写支持图片输入的模型 API Key；修改后重启 CareArk。
+# 下面以 DeepSeek 为例；使用其他模型服务时，请同时修改基础地址、模型名称和 API Key。
 MODEL_PROVIDER=openai-compatible
 MODEL_BASE_URL=https://api.deepseek.com
 MODEL_API_KEY=
@@ -121,7 +122,7 @@ def self_test() -> None:
                         assert setup.json()["required"] is True
                         assert home.status_code == 200
                         created = await client.post(f"http://127.0.0.1:{port}/api/setup/admin", json={
-                            "email": "self-test@example.test", "password": "Correct-Horse-42",
+                            "email": "self-test@example.test", "password": "Test-123",
                         })
                         assert created.status_code == 201
                         assert (await client.get(f"http://127.0.0.1:{port}/api/auth/me")).status_code == 200
