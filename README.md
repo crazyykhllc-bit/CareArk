@@ -109,4 +109,4 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe scripts\build_windows.py
 ```
 
-输出位于 `dist\CareArk-Windows-v0.1.0.zip`，`dist\SHA256SUMS.txt` 是校验值。打包脚本不会读取或加入本机的数据库、原件及 `.env`。
+输出位于 `dist\CareArk-Windows-v<版本号>.zip`，`dist\SHA256SUMS.txt` 是校验值。打包脚本不会读取或加入本机的数据库、原件及 `.env`。

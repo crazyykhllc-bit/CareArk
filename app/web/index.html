@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>个人健康档案工作台</title>
-  <link rel="stylesheet" href="/assets/styles.css?v=20260927-overview-collections-v1">
+  <link rel="stylesheet" href="/assets/styles.css?v=20260928-auth-confirm-v1">
   <link rel="stylesheet" href="/assets/care-history.css?v=20260926-care-history-v4">
   <link rel="stylesheet" href="/assets/app-layout.css?v=20260926-responsive-v1">
 </head>
@@ -16,7 +16,7 @@
     <div class="auth-mark" aria-hidden="true"><span>+</span></div>
     <div class="auth-copy">
       <p class="eyebrow">PERSONAL HEALTH ARCHIVE</p>
-      <h1>把散落的医疗资料，<br>整理成清晰的时间。</h1>
+      <h1>把散落的医疗资料，<br>整理成清晰的<br>个人健康档案。</h1>
       <p>原件私密保存，视觉模型协助提取；每一份资料由你核对后才进入档案。</p>
     </div>
     <form class="auth-card" id="authForm">
@@ -24,6 +24,8 @@
       <h2 id="authTitle">正在检查系统…</h2>
       <label>邮箱<input id="authEmail" type="email" autocomplete="username" required></label>
       <label>密码<input id="authPassword" type="password" autocomplete="current-password" minlength="12" required></label>
+      <label id="authConfirmLabel" class="hidden">确认密码<input id="authConfirmPassword" type="password" autocomplete="new-password" minlength="12"></label>
+      <button class="auth-visibility" id="authPasswordVisibility" type="button" aria-pressed="false">显示密码</button>
       <p class="form-error" id="authError" role="alert"></p>
       <button class="btn primary wide" id="authSubmit" type="submit">继续</button>
     </form>
@@ -157,7 +159,7 @@
   <dialog id="profileCreateDialog" class="dialog profile-create-dialog"><form id="profileCreateForm"><div class="dialog-head"><div><span class="section-index">代管成员档案</span><h3>新增档案成员</h3><p>父母、兄弟姐妹等都可以建档，名称由你填写；此成员无需登录，资料独立保存。</p></div><button class="icon-btn" id="profileCreateClose" type="button" aria-label="关闭">×</button></div><label>成员名称或称呼<input id="profileCreateName" maxlength="100" required placeholder="例如：姐姐、小王"></label><p id="profileCreateError" class="form-error" role="alert"></p><div class="profile-create-actions"><button class="btn" id="profileCreateCancel" type="button">取消</button><button class="btn primary" type="submit">创建并切换</button></div></form></dialog>
   <div class="toast" id="toast" role="status"></div>
   <script src="/assets/api.js?v=20260925-related-care"></script>
-  <script src="/assets/app.js?v=20260927-managed-profiles-v1"></script>
+  <script src="/assets/app.js?v=20260928-auth-confirm-v1"></script>
   <script src="/assets/profiles.js?v=20260927-managed-profiles-v2"></script>
   <script src="/assets/care-picker.js?v=20260926-hierarchy"></script>
   <script src="/assets/batch-planner.js?v=20260925-auto-batching"></script>

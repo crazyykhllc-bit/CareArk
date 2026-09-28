@@ -1,6 +1,6 @@
 # CareArk Windows 版
 
-适用于 Windows 10/11（64 位）。下载 `CareArk-Windows-v0.1.0.zip`，**完整解压**后双击其中的 `CareArk.exe`。这个版本不需要安装 Docker、PostgreSQL、MinIO 或 Python。程序会在本机启动工作台并打开浏览器；首次使用请在网页中创建管理员账号。关闭 CareArk 启动窗口即停止本机服务。
+适用于 Windows 10/11（64 位）。从 [Releases](https://github.com/crazyykhllc-bit/CareArk/releases) 下载最新版 Windows ZIP，**完整解压**后双击其中的 `CareArk.exe`。这个版本不需要安装 Docker、PostgreSQL、MinIO 或 Python。程序会在本机启动工作台并打开浏览器；首次使用请在网页中创建管理员账号。关闭 CareArk 启动窗口即停止本机服务。
 
 数据库和原件不会装在 ZIP 或 EXE 中，也不会随着更新被覆盖。首次启动时，程序会在 `%LOCALAPPDATA%\CareArk` 建立一个**空档案**：`careark.db` 是 SQLite 数据库，`originals` 存放上传的原件，`.env` 存放视觉模型设置。可在启动窗口点击“数据目录”打开这个文件夹。
 
