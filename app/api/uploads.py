@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import tempfile
 import uuid
@@ -88,7 +89,14 @@ async def attachment_content(
         raise HTTPException(404, "附件不存在")
     stream = await storage.get(attachment.object_key)
     headers = {"Content-Disposition": f'inline; filename="{attachment.id}"', "Cache-Control": "private, no-store"}
-    return StreamingResponse(stream, media_type=attachment.mime_type, headers=headers)
+    async def chunks():
+        try:
+            while chunk := await asyncio.to_thread(stream.read, 1024 * 1024):
+                yield chunk
+        finally:
+            await asyncio.to_thread(stream.close)
+
+    return StreamingResponse(chunks(), media_type=attachment.mime_type, headers=headers)
 
 
 @router.get("/attachments/{attachment_id}/preview")

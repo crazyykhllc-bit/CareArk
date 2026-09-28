@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,11 +74,12 @@ async def me(user: User = Depends(get_account_user)) -> dict:
 
 @router.post("/auth/logout", status_code=204)
 async def logout(
+    request: Request,
     response: Response,
-    token: str | None = Cookie(default=None, alias="health_session"),
     db: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> Response:
+    token = request.cookies.get(settings.session_cookie_name)
     if token:
         await db.execute(update(Session).where(Session.token_hash == hash_token(token)).values(revoked_at=datetime.now(timezone.utc)))
         await db.commit()

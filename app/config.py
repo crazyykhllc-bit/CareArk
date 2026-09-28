@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     s3_secret_key: str = ""
     s3_bucket: str = "health-archive"
     s3_secure: bool = False
+    storage_backend: str = "minio"
+    file_storage_root: str = ""
 
     model_provider: str = "openai-compatible"
     model_base_url: str = "https://api.openai.com/v1"

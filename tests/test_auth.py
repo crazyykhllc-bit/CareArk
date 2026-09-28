@@ -1,3 +1,8 @@
+from fastapi.testclient import TestClient
+
+from app.config import Settings, get_settings
+
+
 def test_setup_then_invite_only_registration(client):
     assert client.get("/api/setup/status").json() == {"required": True}
 
@@ -100,3 +105,16 @@ def test_admin_can_list_and_disable_invited_user(app):
             assert disabled.json()["is_active"] is False
             assert member.get("/api/auth/me").status_code == 401
         assert admin.patch(f"/api/admin/users/{admin_user['id']}", json={"is_active": False}).status_code == 409
+def test_custom_session_cookie_supports_desktop_login_and_logout(app):
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        _env_file=None, session_cookie_name="careark_desktop_session"
+    )
+    with TestClient(app) as client:
+        created = client.post("/api/setup/admin", json={
+            "email": "desktop@example.test", "password": "Correct-Horse-42",
+        })
+        assert created.status_code == 201
+        assert "careark_desktop_session" in client.cookies
+        assert client.get("/api/auth/me").status_code == 200
+        assert client.post("/api/auth/logout").status_code == 204
+        assert client.get("/api/auth/me").status_code == 401

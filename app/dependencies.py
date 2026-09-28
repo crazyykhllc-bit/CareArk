@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import Cookie, Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,10 +11,11 @@ from app.security import hash_token
 
 
 async def get_auth_context(
-    token: str | None = Cookie(default=None, alias="health_session"),
+    request: Request,
     db: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> tuple[Session, User]:
+    token = request.cookies.get(settings.session_cookie_name)
     if not token:
         raise HTTPException(401, "请先登录")
     row = await db.execute(

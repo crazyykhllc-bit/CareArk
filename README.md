@@ -28,17 +28,19 @@
 
 点击“上传并按分组识别”后，在页面下方的“上传任务”看进度。任务进入“等待人工核对”后打开“核对本次资料”：左侧选择资料，中间对照原件，右侧修改这一份的标题、类型、日期、医院、检验项目等。顶部可以一次更改本批资料的事件归属。还没核对完可“保存草稿”；完成后勾选确认并点击“确认整批归档”。误传的资料可在核对时选择“不归档这份资料”。处理失败的任务会显示原因，可在上传任务中重试或调整。
 
-**文件保存在哪里？**上传的原件放在私有 MinIO 存储中，识别与核对后的结构化内容保存在 PostgreSQL。待核对内容留在“上传资料”，不会直接进入正式档案；确认后可在“健康档案”按事件查看，在“原始资料”逐份查看，已确认的检验结果会进入“数据概览”的指标与趋势。视觉模型可能出错，尤其是数字、单位、日期和患者姓名，请以原件为准。
+**文件保存在哪里？**Windows 版把原件和 SQLite 数据库保存在 `%LOCALAPPDATA%\CareArk`；Docker 版把原件放在私有 MinIO 存储中，结构化内容保存在 PostgreSQL。待核对内容留在“上传资料”，不会直接进入正式档案；确认后可在“健康档案”按事件查看，在“原始资料”逐份查看，已确认的检验结果会进入“数据概览”的指标与趋势。视觉模型可能出错，尤其是数字、单位、日期和患者姓名，请以原件为准。
 
 ## 第一次启动和创建账户
 
-普通用户推荐使用 Docker Desktop 和 Docker Compose。**不用单独安装或操作 PostgreSQL、MinIO**；Compose 会在本机启动这两个服务和网站。先确保 Docker Desktop 正在运行，然后在项目目录执行：
+**Windows 双击运行：**从 [Releases](https://github.com/crazyykhllc-bit/CareArk/releases) 下载 Windows ZIP，完整解压后运行 `CareArk.exe`。这个版本不需要安装 Docker、PostgreSQL、MinIO 或 Python；数据库和原件会建立在自己的 `%LOCALAPPDATA%\CareArk` 目录。详细步骤与备份方式见 [Windows 版说明](WINDOWS.md)。
+
+**源码 / Docker 运行：**安装 Docker Desktop 和 Docker Compose 后，**不用单独安装或操作 PostgreSQL、MinIO**；Compose 会在本机启动这两个服务和网站。先确保 Docker Desktop 正在运行，然后在项目目录执行：
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-打开 `.env`，为 `POSTGRES_PASSWORD` 和 `S3_SECRET_KEY` 分别设置独立的强密码，并填写视觉模型 API Key。密码建议使用密码管理器生成的字母数字随机串；不要把 `.env` 上传到 GitHub。没有模型密钥也能先打开网页，但无法识别新资料。完成后执行：
+Docker 方式打开 `.env`，为 `POSTGRES_PASSWORD` 和 `S3_SECRET_KEY` 分别设置独立的强密码，并填写视觉模型 API Key。Windows 版则通过启动窗口的“模型设置”编辑自己的 `.env`，无需数据库和存储密码。密码建议使用密码管理器生成的字母数字随机串；不要把 `.env` 上传到 GitHub。没有模型密钥也能先打开网页，但无法识别新资料。Docker 配置完成后执行：
 
 ```powershell
 docker compose up -d --build
@@ -61,7 +63,7 @@ MODEL_STRICT_JSON_SCHEMA=false
 
 另一种国内选择是阿里云百炼的**千问视觉模型**，例如 `qwen3-vl-plus`。按[百炼官方兼容接口说明](https://help.aliyun.com/zh/model-studio/qwen-vl-compatible-with-openai)填写所属地域的 `MODEL_BASE_URL`、API Key 和模型名；北京地域现在推荐业务空间专属地址，需要把地址中的 `{WorkspaceId}` 换成自己的业务空间 ID。其他支持**图片输入、Chat Completions 和 JSON 输出**的兼容服务也可以接入，包括 OpenAI。只会处理文字的模型不能识别扫描件。
 
-`MODEL_BASE_URL` 填基础地址，不要把 `/chat/completions` 再写进去。更换服务商时要同时更换密钥和模型名，并按它对 JSON Schema / JSON Object 的支持调整 `MODEL_STRICT_JSON_SCHEMA`。配置变更后运行：
+`MODEL_BASE_URL` 填基础地址，不要把 `/chat/completions` 再写进去。更换服务商时要同时更换密钥和模型名，并按它对 JSON Schema / JSON Object 的支持调整 `MODEL_STRICT_JSON_SCHEMA`。Windows 版保存设置后关闭并重新打开程序；Docker 版配置变更后运行：
 
 ```powershell
 docker compose up -d --force-recreate web worker
@@ -71,7 +73,7 @@ docker compose up -d --force-recreate web worker
 
 ## PostgreSQL 必须自己安装吗？
 
-**按本项目当前推荐的运行方式，需要 PostgreSQL，但不需要用户手动安装。**`docker compose up` 会自动启动 PostgreSQL、MinIO、网站和识别 Worker；平时只需使用网页。项目代码含用于开发和测试的 SQLite 配置，但当前没有把 SQLite 作为完整、受支持的日常部署方案，因此不要直接把数据库地址改成 SQLite 后迁移真实健康资料。
+**Windows 版不需要 PostgreSQL**，会自动创建本机 SQLite 数据库和原件目录。Docker 版需要 PostgreSQL，但不需要用户手动安装；`docker compose up` 会自动启动 PostgreSQL、MinIO、网站和识别 Worker。两种版本的数据目录不同，不会自动互相迁移；不要只改数据库地址来搬迁真实健康资料。
 
 Docker 也不是唯一运行方式。熟悉部署的用户可以自行安装 PostgreSQL 和 MinIO，配置环境变量，执行 `alembic upgrade head`，再分别运行 `uvicorn app.main:app` 与 `python -m app.worker`。这比 Docker 步骤多，首次使用建议先按上面的本机方式启动。
 
@@ -79,7 +81,7 @@ Docker 也不是唯一运行方式。熟悉部署的用户可以自行安装 Pos
 
 支持 JPG、PNG、WebP、PDF、DOCX、XLSX 和 CSV；旧版 DOC/XLS 建议先转为 DOCX/XLSX。默认单文件上限为 25 MiB，PDF 最多处理 30 页。模型读取扫描件和照片，表格文件尽量直接读取单元格。
 
-“原始资料”的完整导出会生成带 `health_archive_export.v5` 清单的 ZIP；受管成员分别导出。ZIP 包含健康隐私资料，应加密保管。**导出 ZIP 不等于完整服务器备份**：迁移或升级前应同时备份 PostgreSQL 数据库和 MinIO 原件，并验证恢复。当前数据库迁移版本为 `0016`。
+“原始资料”的完整导出会生成带 `health_archive_export.v5` 清单的 ZIP；受管成员分别导出。ZIP 包含健康隐私资料，应加密保管。**导出 ZIP 不等于完整备份**：Windows 版请先关闭程序，再备份整个 `%LOCALAPPDATA%\CareArk` 文件夹；Docker 版应同时备份 PostgreSQL 数据库和 MinIO 原件，并验证恢复。当前数据库迁移版本为 `0016`。
 
 示例 Compose 只将网站和 MinIO 控制台绑定到本机 `127.0.0.1`，**不能原样用于公网部署**。公网环境还需 HTTPS、`SECURE_COOKIES=true`、独立强密码、秘密管理、访问控制、可靠备份，并在开放访问前完成管理员初始化。
 
@@ -96,3 +98,15 @@ docker compose config
 ```
 
 自动测试使用假模型和测试存储，不消耗真实模型额度。运行 `docker compose config` 前需要按上文先创建并填写 `.env`。
+
+## 从源码构建 Windows 版
+
+在 Windows 10/11（64 位）和 Python 3.12 下执行：
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install ".[desktop]"
+.\.venv\Scripts\python.exe scripts\build_windows.py
+```
+
+输出位于 `dist\CareArk-Windows-v0.1.0.zip`，`dist\SHA256SUMS.txt` 是校验值。打包脚本不会读取或加入本机的数据库、原件及 `.env`。
