@@ -30,7 +30,7 @@
 
 **文件保存在哪里？**Windows 版把原件和 SQLite 数据库保存在 `%LOCALAPPDATA%\CareArk`；Docker 版把原件放在私有 MinIO 存储中，结构化内容保存在 PostgreSQL。待核对内容留在“上传资料”，不会直接进入正式档案；确认后可在“健康档案”按事件查看，在“原始资料”逐份查看，已确认的检验结果会进入“数据概览”的指标与趋势。视觉模型可能出错，尤其是数字、单位、日期和患者姓名，请以原件为准。
 
-## 第一次启动和创建账户
+## 如何安装？
 
 **Windows 双击运行：**从 [Releases](https://github.com/crazyykhllc-bit/CareArk/releases) 下载 Windows ZIP，完整解压后运行 `CareArk.exe`。这个版本不需要安装 Docker、PostgreSQL、MinIO 或 Python；数据库和原件会建立在自己的 `%LOCALAPPDATA%\CareArk` 目录。详细步骤与备份方式见 [Windows 版说明](WINDOWS.md)。
 
