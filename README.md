@@ -34,6 +34,14 @@
 
 **Windows 双击运行：**从 [Releases](https://github.com/crazyykhllc-bit/CareArk/releases) 下载 Windows ZIP，完整解压后运行 `CareArk.exe`。这个版本不需要安装 Docker、PostgreSQL、MinIO 或 Python；数据库和原件会建立在自己的 `%LOCALAPPDATA%\CareArk` 目录。详细步骤与备份方式见 [Windows 版说明](WINDOWS.md)。
 
+**Windows 一行安装（免 Setup）：**打开普通 PowerShell 窗口，粘贴下面这一行。不需要管理员权限，也不需要安装 Docker 或 Python：
+
+```powershell
+& ([scriptblock]::Create((Invoke-RestMethod 'https://raw.githubusercontent.com/crazyykhllc-bit/CareArk/main/scripts/install-windows.ps1')))
+```
+
+命令会下载最新稳定版 Windows ZIP、核对 SHA256，解压到 `%LOCALAPPDATA%\Programs\CareArk\versions`，并创建桌面的 **CareArk** 快捷方式。安装完双击快捷方式打开；程序不会自动启动。以后关闭正在运行的 CareArk，再执行同一条命令即可获取最新版。旧版程序会保留，新版校验完成后才更新快捷方式；已有档案和模型设置继续使用。该方式与手动下载 ZIP 并行，都是同一个本机程序。脚本内容可在 [install-windows.ps1](scripts/install-windows.ps1) 查看。
+
 **源码 / Docker 运行：**安装 Docker Desktop 和 Docker Compose 后，**不用单独安装或操作 PostgreSQL、MinIO**；Compose 会在本机启动这两个服务和网站。先确保 Docker Desktop 正在运行，然后在项目目录执行：
 
 ```powershell
