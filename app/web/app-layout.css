@@ -16,7 +16,10 @@
   padding: 24px 16px;
 }
 .sidebar nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; min-width: 0; }
-.sidebar .nav-btn { min-width: 0; min-height: 44px; white-space: nowrap; font-size: 14px; }
+.sidebar .nav-btn { position: relative; min-width: 0; min-height: 44px; gap: 12px; white-space: nowrap; font-size: 14px; }
+.sidebar .nav-icon-wrap { display: grid; place-items: center; width: 22px; height: 22px; flex: 0 0 22px; }
+.sidebar .nav-icon { display: block; width: 20px; height: 20px; }
+.sidebar .nav-btn.active::before { position: absolute; left: 0; top: 50%; margin: 0; transform: translateY(-50%); }
 .nav-btn span, .nav-btn em, .brand-cross { flex-shrink: 0; }
 .brand { display: flex; min-width: 0; }
 .sidebar-foot { display: block; }

@@ -7,7 +7,7 @@
   <title>个人健康档案工作台</title>
   <link rel="stylesheet" href="/assets/styles.css?v=20260928-auth-confirm-v1">
   <link rel="stylesheet" href="/assets/care-history.css?v=20260926-care-history-v4">
-  <link rel="stylesheet" href="/assets/app-layout.css?v=20260926-responsive-v1">
+  <link rel="stylesheet" href="/assets/app-layout.css?v=20260928-sidebar-icons-v1">
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -35,12 +35,12 @@
     <aside class="sidebar">
       <div class="brand"><span class="brand-cross">+</span><div><strong>个人健康档案</strong><small>PRIVATE WORKBENCH</small></div></div>
       <nav class="nav" aria-label="主导航">
-        <button class="nav-btn active" data-view="overview"><span>◉</span>数据概览</button>
-        <button class="nav-btn" data-view="home"><span>⌁</span>健康档案</button>
-        <button class="nav-btn" data-view="upload"><span>↑</span>上传资料 <em id="pendingBadge">0</em></button>
-        <button class="nav-btn" data-view="drugs"><span>◇</span>药品管理</button>
-        <button class="nav-btn" data-view="costs"><span>¥</span>医疗费用</button>
-        <button class="nav-btn" data-view="archive"><span>□</span>原始资料</button>
+        <button class="nav-btn active" data-view="overview"><span class="nav-icon-wrap" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true" focusable="false" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6" /> <path d="M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10" /> <path d="M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14" /> <path d="M4 20h14" /> </svg></span>数据概览</button>
+        <button class="nav-btn" data-view="home"><span class="nav-icon-wrap" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true" focusable="false" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M12 19h-7a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v3.5" /> <path d="M16 19h6" /> <path d="M19 16v6" /> </svg></span>健康档案</button>
+        <button class="nav-btn" data-view="upload"><span class="nav-icon-wrap" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true" focusable="false" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /> <path d="M7 9l5 -5l5 5" /> <path d="M12 4l0 12" /> </svg></span>上传资料 <em id="pendingBadge">0</em></button>
+        <button class="nav-btn" data-view="drugs"><span class="nav-icon-wrap" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true" focusable="false" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M4.5 12.5l8 -8a4.94 4.94 0 0 1 7 7l-8 8a4.94 4.94 0 0 1 -7 -7" /> <path d="M8.5 8.5l7 7" /> </svg></span>药品管理</button>
+        <button class="nav-btn" data-view="costs"><span class="nav-icon-wrap" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true" focusable="false" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16l-3 -2l-2 2l-2 -2l-2 2l-2 -2l-3 2m4 -14h6m-6 4h6m-2 4h2" /> </svg></span>医疗费用</button>
+        <button class="nav-btn" data-view="archive"><span class="nav-icon-wrap" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true" focusable="false" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M15 3v4a1 1 0 0 0 1 1h4" /> <path d="M18 17h-7a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h4l5 5v7a2 2 0 0 1 -2 2" /> <path d="M16 17v2a2 2 0 0 1 -2 2h-7a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h2" /> </svg></span>原始资料</button>
       </nav>
       <div class="sidebar-foot"><div class="user-chip"><span id="userInitial">U</span><div><strong id="userEmail">—</strong><small id="userRole">普通用户</small></div></div><button class="text-btn admin-only hidden" type="button" data-view="admin">用户管理</button><button class="text-btn" id="logoutBtn">退出登录</button></div>
     </aside>
