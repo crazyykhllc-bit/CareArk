@@ -1,0 +1,14 @@
+.git
+.worktrees
+.venv
+__pycache__
+.pytest_cache
+tests
+docs
+outputs
+*.db
+.env
+node_modules
+test-results
+playwright-report
+backups

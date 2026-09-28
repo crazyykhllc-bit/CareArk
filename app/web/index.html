@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>个人健康档案工作台</title>
+  <link rel="stylesheet" href="/assets/styles.css?v=20260927-overview-collections-v1">
+  <link rel="stylesheet" href="/assets/care-history.css?v=20260926-care-history-v4">
+  <link rel="stylesheet" href="/assets/app-layout.css?v=20260926-responsive-v1">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <section class="auth-shell" id="view-auth">
+    <div class="auth-mark" aria-hidden="true"><span>+</span></div>
+    <div class="auth-copy">
+      <p class="eyebrow">PERSONAL HEALTH ARCHIVE</p>
+      <h1>把散落的医疗资料，<br>整理成清晰的时间。</h1>
+      <p>原件私密保存，视觉模型协助提取；每一份资料由你核对后才进入档案。</p>
+    </div>
+    <form class="auth-card" id="authForm">
+      <p class="step-label" id="authStep">安全入口</p>
+      <h2 id="authTitle">正在检查系统…</h2>
+      <label>邮箱<input id="authEmail" type="email" autocomplete="username" required></label>
+      <label>密码<input id="authPassword" type="password" autocomplete="current-password" minlength="12" required></label>
+      <p class="form-error" id="authError" role="alert"></p>
+      <button class="btn primary wide" id="authSubmit" type="submit">继续</button>
+    </form>
+  </section>
+
+  <div class="app app-shell hidden" id="appShell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-cross">+</span><div><strong>个人健康档案</strong><small>PRIVATE WORKBENCH</small></div></div>
+      <nav class="nav" aria-label="主导航">
+        <button class="nav-btn active" data-view="overview"><span>◉</span>数据概览</button>
+        <button class="nav-btn" data-view="home"><span>⌁</span>健康档案</button>
+        <button class="nav-btn" data-view="upload"><span>↑</span>上传资料 <em id="pendingBadge">0</em></button>
+        <button class="nav-btn" data-view="drugs"><span>◇</span>药品管理</button>
+        <button class="nav-btn" data-view="costs"><span>¥</span>医疗费用</button>
+        <button class="nav-btn" data-view="archive"><span>□</span>原始资料</button>
+      </nav>
+      <div class="sidebar-foot"><div class="user-chip"><span id="userInitial">U</span><div><strong id="userEmail">—</strong><small id="userRole">普通用户</small></div></div><button class="text-btn admin-only hidden" type="button" data-view="admin">用户管理</button><button class="text-btn" id="logoutBtn">退出登录</button></div>
+    </aside>
+
+    <main id="main">
+      <header class="topbar"><div class="page-title"><p class="eyebrow" id="pageEyebrow">健康档案</p><h2 id="pageTitle">健康时间线</h2><p id="pageSubtitle">按主要日期整理已经确认的医疗资料</p></div><div class="topbar-profile-actions"><label class="profile-switcher" for="profileSwitcher"><span>当前档案</span><select id="profileSwitcher" aria-label="切换档案成员"><option>我</option></select></label><div class="system-state sync"><i class="sync-dot"></i><span id="modelStatus">检查解析服务…</span></div></div></header>
+
+      <section class="view active" id="view-overview">
+        <div class="stack">
+          <div class="notice"><span aria-hidden="true">ⓘ</span><div><strong>所有统计只属于当前档案成员</strong> 未确认日期、未知金额和不同单位会分别显示，不会自动补零或换算。</div></div>
+          <section class="card archive-summary">
+            <article class="stat"><span class="stat-icon">□</span><div class="stat-label">医疗资料</div><div class="stat-value" id="overviewDocuments">—</div><div class="stat-foot" id="overviewDocumentFoot">正在读取</div></article>
+            <article class="stat"><span class="stat-icon">▦</span><div class="stat-label">记录医院</div><div class="stat-value" id="overviewHospitals">—</div><div class="stat-foot">按名称去重</div></article>
+            <article class="stat"><span class="stat-icon">▣</span><div class="stat-label">最近主要日期</div><div class="stat-value" id="overviewLatest">—</div><div class="stat-foot">仅使用有效日期</div></article>
+            <article class="stat"><span class="stat-icon">¥</span><div class="stat-label">已记录票据费用</div><div class="stat-value" id="overviewCostTotal">—</div><div class="stat-foot" id="overviewCostFoot">正在读取</div></article>
+          </section>
+          <div class="notice ownership-notice hidden" id="overviewOwnership"><span aria-hidden="true">ⓘ</span><div><strong id="ownershipSummary"></strong><p>旧资料尚未完成成员归属核对；核对后，已确认的检验结果才会进入当前成员的指标趋势。</p></div><button class="btn small" type="button" id="reviewOwnership">整理旧资料</button></div>
+          <div class="overview-grid health-overview-grid">
+            <section class="card overview-panel health-metric-panel"><div class="section-head"><div><span class="eyebrow">自动更新</span><h3>健康指标</h3><p>默认显示最多 10 项；你可以自行添加或移出首页，历史结果始终保留</p></div><button class="btn small" id="manageOverviewMetrics" type="button">添加 / 管理指标</button></div><div class="health-metric-head"><span>指标</span><span>最新结果</span><span>日期</span><span>记录</span><span>趋势</span><span></span></div><div id="overviewMetrics" class="health-metric-table"></div></section>
+            <aside class="overview-rail"><section class="card overview-panel"><div class="section-head"><div><span class="eyebrow">资料活动</span><h3>跨年度资料活动</h3></div></div><div id="overviewActivity" class="overview-activity"></div></section><section class="card overview-panel"><div class="section-head"><div><span class="eyebrow">资料构成</span><h3>资料类型分布</h3></div></div><div id="overviewTypes" class="overview-list"></div></section></aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-metric-detail">
+        <button class="btn small metric-page-back" id="metricDetailBack" type="button">← 返回数据概览</button>
+        <div class="metric-page-heading"><div><h3 id="metricDetailTitle">健康指标</h3><p id="metricDetailGroup"></p></div><div class="record-head-actions"><button class="btn small" id="metricEntryTrashBtn" type="button">日常记录回收站</button><button class="btn primary hidden" id="metricDetailRecord" type="button">新增一次结果</button></div></div>
+        <section class="card metric-page-summary" id="metricDetailSummary"></section>
+        <div class="metric-page-grid">
+          <section class="card metric-trend-panel"><div class="metric-panel-head"><h4>结果趋势</h4><div class="metric-periods" id="metricDetailPeriods"><button type="button" data-period="3m">近 3 个月</button><button type="button" data-period="12m">近 12 个月</button><button type="button" data-period="all" class="active">全部</button></div></div><div id="metricDetailTrend" class="metric-trend-body"></div><p class="metric-panel-foot">仅连接项目含义与单位一致的结果；每次报告保留自己的参考范围。</p></section>
+          <aside class="card metric-compare-panel"><h4>数据可比性</h4><div id="metricDetailCompare"></div></aside>
+          <section class="card metric-history-panel"><div class="metric-panel-head"><h4>完整历史记录</h4><span>每条结果可追溯来源</span></div><div class="metric-history-scroll"><table><thead><tr><th>日期</th><th>结果</th><th>单位</th><th>原报告参考范围</th><th>原报告提示</th><th>来源</th><th>核对状态</th><th></th></tr></thead><tbody id="metricDetailHistory"></tbody></table></div></section>
+        </div>
+      </section>
+
+      <section class="view" id="view-home">
+        <div class="care-history" id="careHistory">
+          <div class="notice"><span aria-hidden="true">ⓘ</span><div><strong>按实际资料整理诊疗经过</strong> 小事件记录独立诊疗，大事件串联持续过程；各次医院、日期与原件分别保留。</div></div>
+          <section class="care-summary" aria-label="诊疗历程概览"><article><span>诊疗事件</span><strong id="careEventCount">—</strong><small>按独立小事件与大事件展示</small></article><article><span>涉及医院</span><strong id="careHospitalCount">—</strong><small>按事件实际医院统计</small></article><article><span>最近事件</span><strong id="careLatestDate">—</strong><small>日期不明的事件单独显示</small></article></section>
+          <div class="care-toolbar"><div class="care-tabs" role="tablist" aria-label="健康档案视图"><button id="careTimelineTab" type="button" data-care-tab="timeline" role="tab" aria-selected="true">全部事件</button><button id="careSmallTab" type="button" data-care-tab="small" role="tab" aria-selected="false">小事件</button><button id="careTopicsTab" type="button" data-care-tab="topics" role="tab" aria-selected="false">大事件</button></div><div class="care-actions"><button class="btn small" id="careSuggestionsBtn" type="button">待整理 <span id="careSuggestionCount">0</span></button><button class="btn small" id="careTrashBtn" type="button">事件回收站</button><button class="btn small" id="careAddEvent" type="button">添加小事件</button><button class="btn primary small" id="careAddTopic" type="button">新建大事件</button></div></div>
+          <div id="careTimelinePanel"><div class="care-filters"><label>搜索<input id="careSearch" type="search" placeholder="事件、医院或科室"></label><label>医院<select id="careHospital"><option value="">全部医院</option></select></label><label>类型<select id="careKind"><option value="">全部类型</option><option value="outpatient">门诊</option><option value="inpatient">住院</option><option value="examination">检查</option><option value="laboratory">检验</option><option value="checkup">体检</option><option value="procedure">操作</option><option value="followup">复诊</option><option value="other">其他诊疗</option></select></label><label>起始日期<input id="careDateFrom" type="date"></label><label>截止日期<input id="careDateTo" type="date"></label><label class="hidden">所属大事件<select id="careTopicFilter"><option value="">全部主题</option></select></label></div><div id="careTimeline" class="care-events"><div class="empty">正在读取诊疗历程…</div></div><div id="careMonths" class="care-months"></div><div id="careUndated" class="care-months"></div></div>
+          <div id="careTopicsPanel" class="hidden"><div id="careTopicList" class="care-topic-list"></div></div>
+          <div id="careDetailPanel" class="hidden" aria-live="polite"></div>
+          <div id="careSuggestionPanel" class="hidden"><div class="care-panel-head"><h3>待整理建议</h3><button class="btn small" type="button" data-care-back>返回诊疗历程</button></div><p>旧资料只提供整理建议，接受后才建立小事件或大事件；已确认的原始分组不会被改写。</p><button id="careAcceptSelected" class="btn primary small hidden" type="button">批量接受已核对项 <span id="careSelectedCount">0</span></button><div id="careSuggestionList"></div></div>
+          <div id="careTrashPanel" class="hidden"><div class="care-panel-head"><h3>事件回收站</h3><button class="btn small" type="button" data-care-back>返回诊疗历程</button></div><div id="careTrashList"></div></div>
+          <div hidden aria-hidden="true"><input id="searchInput"><select id="typeFilter"></select><select id="hospitalFilter"></select><span id="metricDocuments"></span><span id="metricHospitals"></span><span id="metricLatest"></span><div id="timeline"></div><span id="homePendingCount"></span></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-metrics">
+        <div class="metrics-layout">
+          <section class="panel"><div class="panel-head"><div><span class="section-index">CATALOG</span><h3>指标目录</h3></div><button class="btn small" id="refreshMetrics">刷新</button></div><div id="metricCatalog" class="metric-catalog"></div><details class="custom-metric"><summary>添加自定义指标</summary><form id="customMetricForm" class="v19-form"><label>名称<input id="customMetricName" required></label><label>分组<input id="customMetricGroup" required placeholder="例如 肝功能"></label><label>记录类型<select id="customMetricType"><option value="numeric">单数值</option><option value="pair">双数值</option><option value="qualitative">定性结果</option></select></label><label>单位<input id="customMetricUnit"></label><div id="customMetricPair" class="pair-fields hidden"><label>分量 1 名称<input id="customMetricLabel1"></label><label>分量 2 名称<input id="customMetricLabel2"></label></div><p class="form-error" id="customMetricError"></p><button class="btn" type="submit">保存自定义指标</button></form></details></section>
+          <section class="panel"><span class="section-index">DAILY ENTRY</span><h3>添加日常记录</h3><form id="metricEntryForm" class="v19-form"><label>指标<select id="metricEntryMetric" required></select></label><label>日期<input id="metricEntryDate" type="date" required></label><label>原始结果<input id="metricEntryRaw" required placeholder="例如 5.6 或 120/80"></label><div class="pair-fields"><label>数值 1<input id="metricEntryValue1" inputmode="decimal"></label><label>数值 2<input id="metricEntryValue2" inputmode="decimal"></label></div><label>定性结果<input id="metricEntryText" placeholder="例如 阴性"></label><label>单位<input id="metricEntryUnit"></label><label>条件<input id="metricEntryCondition" placeholder="例如 空腹"></label><p class="form-error" id="metricEntryError"></p><button class="btn primary" type="submit">保存记录</button></form></section>
+        </div>
+        <section class="panel v19-history"><div class="panel-head"><div><span class="section-index">HISTORY</span><h3 id="metricHistoryTitle">指标历史</h3></div></div><div id="metricHistory" class="overview-list"><div class="empty">从指标目录选择一项查看来源和趋势</div></div></section>
+      </section>
+
+      <section class="view" id="view-ogtt">
+        <div class="metrics-layout">
+          <section class="panel"><div class="panel-head"><div><span class="section-index">TEST SESSIONS</span><h3>OGTT 试验</h3></div><button class="btn small" id="refreshOgtt">刷新</button></div><div id="ogttSessions" class="session-list"></div></section>
+          <section class="panel"><span class="section-index">EXPLICIT GROUPING</span><h3>建立一次试验</h3><p>同日同医院的资料不会自动合并，请明确选择属于同次试验的检验点。</p><form id="ogttForm" class="v19-form"><label>试验名称<input id="ogttName" required placeholder="例如 2026 年复查"></label><label>日期<input id="ogttDate" type="date"></label><label>医院<input id="ogttHospital"></label><fieldset><legend>待分组检验点</legend><div id="ogttCandidates" class="candidate-list"></div></fieldset><p class="form-error" id="ogttError"></p><button class="btn primary" type="submit">保存试验分组</button></form></section>
+        </div>
+      </section>
+
+      <section class="view" id="view-costs">
+        <section class="card overview-expense-panel"><div class="overview-expense-heading"><h3>已记录医疗费用</h3></div><div class="overview-expense-lead"><strong id="overviewExpenseTotal">—</strong><span id="overviewExpenseNote">正在读取费用资料</span></div><div id="overviewCosts" class="overview-expense-breakdown"></div><div class="overview-expense-heading overview-expense-year-heading"><h3>年度费用趋势</h3><span>按票据主要日期汇总</span></div><div id="overviewExpenseYears" class="overview-expense-years"></div><p class="overview-expense-foot">金额仅汇总有明确金额且未标记为重复或作废的票据；悬停柱形可查看年度金额和票据数量。不同币种分别展示。</p></section>
+        <section class="card archive-summary" id="costSummary"></section>
+        <section class="panel"><div class="panel-head"><div><span class="section-index">RECEIPTS</span><h3>票据来源</h3></div><button class="btn small" id="refreshCosts">刷新</button></div><div class="toolbar cost-toolbar"><select class="select" id="costYear"><option value="">全部年份</option></select><select class="select" id="costKnown"><option value="">全部金额状态</option><option value="false">金额已知</option><option value="true">金额未知</option></select><select class="select" id="costStatus"><option value="active">仅参与统计</option><option value="all">含重复 / 作废</option></select></div><div id="costReceipts" class="card-list"></div></section>
+      </section>
+
+      <section class="view" id="view-upload">
+        <div class="notice profile-upload-notice" role="status">本次上传将进入 <strong id="uploadProfileName">我</strong> 的健康档案。需要上传其他家人的资料，请先在右上角切换档案成员。</div>
+        <div class="upload-grid hidden"><form class="panel drop-panel" id="uploadForm"><input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx,.csv" multiple required><label class="dropzone" for="fileInput"><span class="upload-arrow">↑</span><h3>选择一份或多份医疗资料</h3><p>图片、PDF、Word、Excel 或 CSV；一次最多 100 个文件，系统自动分批上传</p><strong id="selectedFile">点击选择文件</strong></label><button class="btn primary" id="uploadSubmit" type="submit">上传并开始识别</button><div class="upload-progress hidden" id="uploadProgress"><div class="upload-progress-head"><p class="progress-copy" id="uploadStatus" role="status"></p><span id="uploadProgressLabel">0 / 0</span></div><div class="progress-track" role="progressbar" aria-label="批量资料处理进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar" id="uploadProgressBar"></div></div><div class="upload-queue" id="uploadQueue"></div></div></form><aside class="panel"><span class="section-index">处理流程</span><ol class="flow"><li><b>1</b><div><strong>私密保存原件</strong><p>文件进入你的独立存储空间</p></div></li><li><b>2</b><div><strong>视觉模型识别</strong><p>提取文字、表格和医疗字段</p></div></li><li><b>3</b><div><strong>人工核对</strong><p>确认后才进入正式档案</p></div></li></ol></aside></div><section class="panel upload-pending-panel hidden"><div class="panel-head"><div><span class="section-index">待核对</span><h3>待确认资料</h3><p>对照原件确认后才进入健康档案和趋势</p></div><button class="btn small" type="button" id="refreshUploadPending">刷新</button></div><div id="uploadPendingList" class="card-list"></div></section>
+      </section>
+
+      <section class="view" id="view-pending"><div class="panel"><div class="panel-head"><div><span class="section-index">REVIEW</span><h3>待确认资料</h3></div><button class="btn small" id="refreshPending">刷新</button></div><div id="draftList" class="card-list"></div></div></section>
+      <section class="view" id="view-archive"><div class="panel"><div class="panel-head"><div><span class="section-index">ARCHIVE</span><h3>原始资料档案</h3><p>这里保留每份原件和核对记录；健康档案按日期查看就诊脉络。</p></div><div class="record-head-actions"><button class="btn small" id="archiveTrashToggle" type="button">回收站</button><button class="btn small" id="exportBtn">完整导出</button></div></div><div id="archiveCollection" class="archive-collection hidden"><strong id="archiveCollectionLabel"></strong><button class="btn small" id="archiveCollectionClear" type="button">查看全部资料</button></div><label class="search-box">搜索<input id="archiveSearch" placeholder="文档、医院、类型或日期"></label><p id="archiveStatus" class="archive-status" role="status"></p><div id="archiveList" class="archive-list"></div></div></section>
+      <section class="view" id="view-drugs"><div class="drug-stack"><div class="notice drug-notice"><span aria-hidden="true">ⓘ</span><div><strong>个人药品资料管理</strong><span>药品信息按原始处方、药盒或说明书忠实归档，不提供诊断、推荐、停药或剂量调整建议。</span></div></div><div class="record-head-actions drug-trash-head"><button class="btn small" id="medicationTrashBtn" type="button">药品回收站</button></div><div class="metric-row drug-overview"><article><label>当前正在服用</label><strong id="activeDrugCount">0</strong><small>按药品去重</small></article><article><label>30 天内即将过期</label><strong id="soonDrugCount">0</strong><small>仅按包装有效期计算</small></article><article><label>已过期</label><strong id="expiredDrugCount">0</strong><small>保留历史来源记录</small></article></div><div class="drug-workspace"><div id="drugSections" class="drug-main-column"></div><aside class="drug-rail"><section class="panel drug-plan"><span class="section-index">今日</span><h3>服药计划</h3><p>仅展示用户已确认的实际用药记录</p><div id="todayDrugPlan" class="plan-grid"></div></section><section class="panel drug-source-rule"><span class="section-index">来源原则</span><h3>每次处方分别保留</h3><p>同一种药品不会覆盖旧记录；用法不一致时保留来源，供你核对原始处方。</p></section></aside></div></div></section>
+      <section class="view" id="view-medication-detail"><div class="detail-head"><button class="btn small" id="medDetailBack" type="button">← 返回药品管理</button><div class="detail-title"><h3 id="medDetailTitle">药品详情</h3><p id="medDetailMeta"></p></div><div class="record-head-actions"><button class="btn small" id="medicationEditBtn" type="button">编辑药品</button><button class="btn small danger-outline" id="medicationRemoveBtn" type="button">移入回收站</button><button class="btn small" id="medicationHistoryBtn" type="button">修改记录</button></div></div><div id="medDetailBody" class="drug-detail-layout"><div class="empty">正在读取药品资料…</div></div></section>
+
+      <section class="view" id="view-detail">
+        <div class="card empty" id="detailEmpty">请从健康时间线或原始资料档案选择一份文档查看详情</div>
+        <div class="hidden" id="detailContent">
+          <div class="detail-head">
+            <button class="btn small" id="detailBack" type="button" data-detail-back aria-label="返回上一列表">← 返回</button>
+            <div class="detail-title"><h3 id="detailTitle">文档详情</h3><p id="detailMeta"></p></div><div class="record-head-actions"><button class="btn small" id="documentEditBtn" type="button">编辑资料</button><button class="btn small danger-outline" id="documentTrashBtn" type="button">移入回收站</button><button class="btn small hidden" id="documentRestoreBtn" type="button">恢复资料</button><button class="btn small" id="documentHistoryBtn" type="button">修改记录</button></div>
+          </div>
+          <div class="detail-layout">
+            <section class="card preview-pane">
+              <div class="pane-title"><h4>原始医疗资料</h4><span class="pill" id="sourceName"></span></div>
+              <div class="file-preview" id="filePreview"></div>
+              <div class="src-thumbs" id="sourceThumbs"></div>
+              <a class="src-open hidden" id="sourceOpen" target="_blank" rel="noopener">在新窗口查看原件</a>
+            </section>
+            <section class="card info-pane">
+              <div class="pane-title"><h4>结构化信息</h4><span class="pill green">忠实提取</span></div>
+              <div id="labResults"></div>
+              <div class="field-grid" id="fieldGrid"></div>
+              <div class="parsed"><details><summary>查看完整解析内容</summary><pre id="parsedContent"></pre></details></div>
+            </section>
+          </div>
+        </div>
+      </section>
+      <section class="view" id="view-admin"><div class="workspace-grid"><form class="panel" id="inviteForm"><span class="section-index">ADMIN</span><h3>邀请新用户</h3><p>链接一次有效，默认 24 小时后过期。</p><label>用户邮箱<input id="inviteEmail" type="email" required></label><button class="btn primary" type="submit">创建邀请</button><div class="invite-result hidden" id="inviteResult"><label>邀请链接</label><input id="inviteLink" readonly><button class="btn small" id="copyInvite" type="button">复制链接</button></div></form><aside class="panel quiet"><h3>管理员权限边界</h3><p>管理员可以创建邀请和管理账号，但不能查看其他用户的健康资料、附件、药品或导出文件。</p></aside></div><section class="panel" style="margin-top:18px"><div class="panel-head"><h3>账号列表</h3><button class="btn small" id="refreshUsers">刷新</button></div><div id="userList" class="card-list"></div></section></section>
+    </main>
+  </div>
+
+  <dialog id="reviewDialog" class="dialog review-dialog"><form method="dialog" class="dialog-head"><div><span class="section-index">人工确认</span><h3>核对模型提取结果</h3></div><button class="icon-btn" value="cancel" aria-label="关闭">×</button></form><div class="review-grid"><div id="reviewSource" class="review-source-pane" aria-label="原始医疗资料"></div><div class="review-editor"><label>结构化 JSON<textarea id="draftPayload" spellcheck="false"></textarea></label><p class="form-error" id="draftError"></p><div class="actions"><button class="btn" id="saveDraft">保存修订</button><button class="btn primary" id="confirmDraft">确认并归档</button></div></div></div></dialog>
+  <dialog id="medDialog" class="dialog medication-action-dialog"><div class="med-dialog-heading"><h3 id="medTitle">更新用药状态</h3><p id="medMessage"></p></div><form id="medForm"><input type="hidden" id="medId"><input type="hidden" id="medAction"><input type="hidden" id="medVersion"><div class="med-form-grid"><label><span id="medDateLabel">开始日期 *</span><input id="medDate" type="date" required></label><div id="startFields" class="med-start-fields"><label>个人实际每次用量 *<input id="medDose" autocomplete="off"></label><label>个人实际频次 *<select id="medFrequency" required><option>每日 1 次</option><option>每日 2 次</option><option>每日 3 次</option><option>每日 4 次</option><option>按需使用</option><option>遵医嘱</option></select></label><label>个人实际服用时间<input id="medTiming" autocomplete="off"></label><label>计划结束日期<input id="medPlannedEnd" type="date"></label></div><label id="medPackageLabel" class="med-wide hidden">本次使用包装<select id="medPackage"></select></label><label class="med-wide">备注<textarea id="medNote" placeholder="选填"></textarea></label></div><p class="form-error" id="medError" role="alert"></p><p id="medBoundary" class="med-boundary">这里填写的是个人实际用药计划；包装说明只作为原始资料保留，不会自动填入。</p><div class="med-dialog-actions"><button class="btn" id="medCancel" type="button">取消</button><button class="btn primary" id="medSubmit" type="submit">开始用药</button></div></form></dialog>
+  <dialog id="ownershipDialog" class="dialog ownership-dialog"><header class="dialog-head"><div><span class="section-index">旧资料整理</span><h3>核对已归档资料</h3><p>只选择确实属于当前档案成员的资料。确认后检验结果会自动进入指标趋势。</p></div><button class="icon-btn" type="button" id="closeOwnership" aria-label="关闭">×</button></header><div class="ownership-body"><label class="ownership-select-all"><input type="checkbox" id="ownershipSelectAll">全选待核对资料</label><div id="ownershipList"></div><p class="form-error" id="ownershipError"></p></div><div class="ownership-actions"><button class="btn" type="button" id="cancelOwnership">取消</button><button class="btn primary" type="button" id="confirmOwnership">确认属于当前成员</button></div></dialog>
+  <dialog id="metricRecordDialog" class="dialog compact"><header class="dialog-head"><div><span class="section-index">可选补充</span><h3 id="quickMetricTitle">记录健康指标</h3></div><button class="icon-btn" type="button" data-close-metric-record aria-label="关闭">×</button></header><form id="quickMetricForm" class="v19-form quick-metric-form"><input id="quickMetricId" type="hidden"><label>日期<input id="quickMetricDate" type="date" required></label><label>原始结果<input id="quickMetricRaw" required placeholder="例如 5.6 或 120/80"></label><div class="pair-fields" id="quickMetricNumbers"><label data-quick-number><span id="quickMetricValueLabel">数值</span><input id="quickMetricValue1" inputmode="decimal"></label><label data-quick-pair>数值 2<input id="quickMetricValue2" inputmode="decimal"></label></div><label data-quick-text>定性结果<input id="quickMetricText"></label><label>单位<input id="quickMetricUnit"></label><label>条件<input id="quickMetricCondition" placeholder="例如 空腹"></label><p class="form-error" id="quickMetricError"></p><button class="btn primary" type="submit">保存记录</button></form></dialog>
+  <dialog id="dashboardMetricDialog" class="dialog dashboard-metric-dialog"><header class="dialog-head"><div><span class="section-index">首页显示</span><h3>添加 / 管理指标</h3><p id="dashboardMetricCount">正在读取指标…</p></div><button class="icon-btn" type="button" id="closeDashboardMetrics" aria-label="关闭">×</button></header><div class="dashboard-metric-body"><label class="dashboard-metric-search">搜索指标<input id="dashboardMetricSearch" type="search" placeholder="输入项目名称或分类"></label><div id="dashboardMetricList" class="dashboard-metric-list"></div><p class="dashboard-metric-note">移出首页不会删除检验结果、趋势或原始报告。</p></div></dialog>
+  <dialog id="recordEditDialog" class="dialog record-edit-dialog"><div class="dialog-head"><div><span class="section-index">资料修正</span><h3 id="recordEditTitle">编辑资料</h3><p id="recordEditHint">修改会留下版本记录</p></div><button class="icon-btn" type="button" data-close-record-edit aria-label="关闭">×</button></div><form id="recordEditForm"><div id="recordEditFields" class="record-edit-fields"></div><p class="form-error" id="recordEditError" role="alert"></p><div class="record-dialog-actions"><button class="btn" type="button" data-close-record-edit>取消</button><button class="btn primary" type="submit">保存修改</button></div></form></dialog>
+  <dialog id="recordTrashDialog" class="dialog record-trash-dialog"><div class="dialog-head"><div><span class="section-index">可恢复</span><h3 id="recordTrashTitle">回收站</h3><p id="recordTrashHint">恢复后重新参与相关统计</p></div><button class="icon-btn" type="button" data-close-record-trash aria-label="关闭">×</button></div><div id="recordTrashItems" class="record-trash-items"></div></dialog>
+  <dialog id="recordHistoryDialog" class="dialog record-trash-dialog"><div class="dialog-head"><div><span class="section-index">版本记录</span><h3 id="recordHistoryTitle">修改记录</h3></div><button class="icon-btn" type="button" data-close-record-history aria-label="关闭">×</button></div><div id="recordHistoryItems" class="record-trash-items"></div></dialog>
+  <dialog id="profileCreateDialog" class="dialog profile-create-dialog"><form id="profileCreateForm"><div class="dialog-head"><div><span class="section-index">代管成员档案</span><h3>新增档案成员</h3><p>父母、兄弟姐妹等都可以建档，名称由你填写；此成员无需登录，资料独立保存。</p></div><button class="icon-btn" id="profileCreateClose" type="button" aria-label="关闭">×</button></div><label>成员名称或称呼<input id="profileCreateName" maxlength="100" required placeholder="例如：姐姐、小王"></label><p id="profileCreateError" class="form-error" role="alert"></p><div class="profile-create-actions"><button class="btn" id="profileCreateCancel" type="button">取消</button><button class="btn primary" type="submit">创建并切换</button></div></form></dialog>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="/assets/api.js?v=20260925-related-care"></script>
+  <script src="/assets/app.js?v=20260927-managed-profiles-v1"></script>
+  <script src="/assets/profiles.js?v=20260927-managed-profiles-v2"></script>
+  <script src="/assets/care-picker.js?v=20260926-hierarchy"></script>
+  <script src="/assets/batch-planner.js?v=20260925-auto-batching"></script>
+  <script src="/assets/batches.js?v=20260927-upload-intent-order-v1"></script>
+  <script src="/assets/batch-review.js?v=20260927-managed-profiles-v1"></script>
+  <script src="/assets/encounters.js?v=20260927-overview-collections-v1"></script>
+  <script src="/assets/v19.js?v=20260927-managed-profiles-v1"></script>
+  <script src="/assets/record-management.js?v=20260927-overview-collections-v1"></script>
+  <script src="/assets/care-history.js?v=20260927-topic-loading-v1"></script>
+</body>
+</html>

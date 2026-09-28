@@ -1,0 +1,94 @@
+name: personal-health-archive
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: health_archive
+      POSTGRES_USER: health_archive
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U health_archive -d health_archive"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    image: minio/minio:RELEASE.2025-07-23T15-54-02Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in .env}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?Set S3_SECRET_KEY in .env}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "127.0.0.1:9001:9001"
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    environment: &app-env
+      DATABASE_URL: postgresql+asyncpg://health_archive:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/health_archive
+      S3_ENDPOINT: minio:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in .env}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?Set S3_SECRET_KEY in .env}
+      S3_BUCKET: ${S3_BUCKET:-health-archive}
+      S3_SECURE: "false"
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-openai-compatible}
+      MODEL_BASE_URL: ${MODEL_BASE_URL:-https://api.deepseek.com}
+      MODEL_API_KEY: ${MODEL_API_KEY:-}
+      MODEL_NAME: ${MODEL_NAME:-deepseek-flash}
+      MODEL_FALLBACK_BASE_URL: ${MODEL_FALLBACK_BASE_URL:-}
+      MODEL_FALLBACK_API_KEY: ${MODEL_FALLBACK_API_KEY:-}
+      MODEL_FALLBACK_NAME: ${MODEL_FALLBACK_NAME:-}
+      MODEL_FALLBACK2_BASE_URL: ${MODEL_FALLBACK2_BASE_URL:-}
+      MODEL_FALLBACK2_API_KEY: ${MODEL_FALLBACK2_API_KEY:-}
+      MODEL_FALLBACK2_NAME: ${MODEL_FALLBACK2_NAME:-}
+      MODEL_FALLBACK2_STRICT_JSON_SCHEMA: ${MODEL_FALLBACK2_STRICT_JSON_SCHEMA:-false}
+      MODEL_STRICT_JSON_SCHEMA: ${MODEL_STRICT_JSON_SCHEMA:-false}
+      MODEL_TIMEOUT_SECONDS: ${MODEL_TIMEOUT_SECONDS:-120}
+      MODEL_MAX_RETRIES: ${MODEL_MAX_RETRIES:-3}
+      MODEL_MAX_PAGES: ${MODEL_MAX_PAGES:-30}
+      MODEL_IMAGE_DETAIL: ${MODEL_IMAGE_DETAIL:-high}
+      MODEL_STREAM_RESPONSES: ${MODEL_STREAM_RESPONSES:-true}
+      BATCH_MAX_FILES: ${BATCH_MAX_FILES:-20}
+      BATCH_MAX_BYTES: ${BATCH_MAX_BYTES:-104857600}
+      MODEL_MAX_REQUEST_BYTES: ${MODEL_MAX_REQUEST_BYTES:-41943040}
+      MODEL_MERGE_MAX_SOURCES_PER_REQUEST: ${MODEL_MERGE_MAX_SOURCES_PER_REQUEST:-5}
+      MODEL_MAX_SOURCES_PER_REQUEST: ${MODEL_MAX_SOURCES_PER_REQUEST:-1}
+      MODEL_BATCH_CONCURRENCY: ${MODEL_BATCH_CONCURRENCY:-2}
+      MODEL_CHUNK_MAX_OUTPUT_TOKENS: ${MODEL_CHUNK_MAX_OUTPUT_TOKENS:-4000}
+      MODEL_MAX_OUTPUT_TOKENS: ${MODEL_MAX_OUTPUT_TOKENS:-16000}
+      MODEL_OUTPUT_TOKEN_PARAMETER: ${MODEL_OUTPUT_TOKEN_PARAMETER:-max_tokens}
+      SECURE_COOKIES: ${SECURE_COOKIES:-false}
+      UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-26214400}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: ["python", "-m", "app.worker"]
+    environment: *app-env
+    depends_on:
+      web:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  minio-data:

@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "personal-health-archive"
+version = "0.1.0"
+description = "多用户个人健康档案工作台"
+requires-python = ">=3.10"
+dependencies = [
+  "alembic>=1.13,<2",
+  "argon2-cffi>=23.1,<26",
+  "asyncpg>=0.29,<1",
+  "fastapi>=0.115,<1",
+  "httpx>=0.27,<1",
+  "minio>=7.2,<8",
+  "openpyxl>=3.1,<4",
+  "pillow>=12.2,<13",
+  "pydantic-settings>=2.5,<3",
+  "pymupdf>=1.24,<2",
+  "psycopg[binary]>=3.2,<4",
+  "python-docx>=1.1,<2",
+  "python-multipart>=0.0.9,<1",
+  "sqlalchemy[asyncio]>=2.0,<3",
+  "uvicorn[standard]>=0.30,<1",
+]
+
+[project.optional-dependencies]
+test = [
+  "aiosqlite>=0.20,<1",
+  "pytest>=8,<9",
+  "pytest-asyncio>=0.24,<1",
+  "pytest-httpx>=0.30,<1",
+  "pyyaml>=6,<7",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
