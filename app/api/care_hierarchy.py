@@ -14,7 +14,7 @@ from app.db import get_db
 from app.dependencies import get_current_user
 from app.models import CareTopic, CareTopicEncounter, CareSuggestion, Document, Encounter, User, utcnow
 from app.schemas import StrictModel
-from app.services.care_history import classify_document, document_date_basis, serialize_events
+from app.services.care_history import EVENT_KIND_LABELS, classify_document, document_date_basis, serialize_events
 from app.services.care_hierarchy import (children, get_topic, hierarchy_cards, overview,
     record_revision, set_parent, topic_cards)
 
@@ -81,6 +81,9 @@ async def list_hierarchy(query: str | None = None, hospital: str | None = None,
     offset: int = Query(0,ge=0),limit: int = Query(10,ge=1,le=100),
     user: User = Depends(get_current_user),db: AsyncSession = Depends(get_db)):
     cards = await hierarchy_cards(db,user.id)
+    # Filter choices belong to the whole archive, not the current result set.
+    all_hospitals = Counter(h for x in cards for h in
+        (x.get('hospitals') or ([x['hospital']] if x.get('hospital') else [])))
     if topic_id:
         cards = [x for x in cards if x['item_type'] == 'topic' and x['id'] == str(topic_id)
             or str(topic_id) in x.get('topic_ids',[])]
@@ -89,8 +92,10 @@ async def list_hierarchy(query: str | None = None, hospital: str | None = None,
     if event_kind:
         matching = set((await db.scalars(select(Encounter.primary_topic_id).where(
             Encounter.owner_id == user.id,Encounter.deleted_at.is_(None),Encounter.event_kind == event_kind))).all())
+        kind_label = EVENT_KIND_LABELS.get(event_kind) if event_kind != 'other' else None
         cards = [x for x in cards if x.get('event_kind') == event_kind or
-            x['item_type'] == 'topic' and UUID(x['id']) in matching]
+            x['item_type'] == 'topic' and (UUID(x['id']) in matching or
+                bool(kind_label and kind_label in x.get('name','')))]
     if hospital:
         cards = [x for x in cards if x.get('hospital') == hospital or hospital in x.get('hospitals',[])]
     if query and query.strip():
@@ -108,7 +113,7 @@ async def list_hierarchy(query: str | None = None, hospital: str | None = None,
     ownership_pending = await db.scalar(select(func.count()).select_from(ambiguous_events(user.id).subquery())) or 0
     metadata = {'older_months':[{'month':m,'count':count} for m,count in sorted(months.items(),reverse=True)],
         'undated_count':sum(x['date'] is None for x in tail),
-        'hospitals':[{'name':h,'event_count':count} for h,count in sorted(hospitals.items())],
+        'hospitals':[{'name':h,'event_count':count} for h,count in sorted(all_hospitals.items())],
         'summary':{'event_count':len(cards),'hospital_count':len(hospitals),
             'latest_date':next((x['date'] for x in cards if x['date']),None),
             'pending_count':await db.scalar(select(func.count()).select_from(CareSuggestion).where(

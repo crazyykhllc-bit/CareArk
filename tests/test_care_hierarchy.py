@@ -61,6 +61,25 @@ def test_cross_hospital_parent_moves_and_detaches_without_copying(client, sessio
     assert client.get('/api/care-hierarchy').json()['total'] == 2
 
 
+def test_filters_keep_all_hospital_choices_and_find_named_checkup_topic(client, session_factory):
+    owner = setup_admin(client)
+    first, second, _, _ = seed_records(session_factory, owner['id'])
+    topic = upgrade(client, first, name='全面体检')['topic_id']
+    moved = client.put(f'/api/care-history/events/{second}/parent',
+        json={'expected_version': 1, 'topic_id': topic, 'action': 'move'})
+    assert moved.status_code == 200, moved.text
+
+    filtered = client.get('/api/care-hierarchy?hospital=乙医院').json()
+    assert filtered['total'] == 1
+    assert filtered['items'][0]['id'] == topic
+    assert {item['name'] for item in filtered['hospitals']} == {'甲医院', '乙医院'}
+
+    checkup = client.get('/api/care-hierarchy?hospital=乙医院&event_kind=checkup').json()
+    assert checkup['total'] == 1
+    assert checkup['items'][0]['id'] == topic
+    assert {item['name'] for item in checkup['hospitals']} == {'甲医院', '乙医院'}
+
+
 def test_attach_document_moves_whole_event_and_receipt_stays_source(client, session_factory):
     owner = setup_admin(client)
     first, second, source, loose = seed_records(session_factory, owner['id'])

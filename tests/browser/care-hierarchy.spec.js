@@ -37,6 +37,27 @@ test('one list shows small and big events and upgrades without reupload',async({
   await expect.poll(()=>page.__upgrade?.name).toBe('普通门诊后续诊疗');
   expect(page.__upgrade.expected_version).toBe(1);
 });
+
+test('hospital choices remain available after filtering and combining with event type',async({page})=>{
+  await page.route('https://hierarchy.test/api/care-hierarchy?**',route=>{
+    const query=new URL(route.request().url()).searchParams;
+    const hospital=query.get('hospital');
+    return route.fulfill({json:{
+      items:hospital&&hospital!=='甲医院'?[]:[{id:'t-checkup',name:'全面体检',item_type:'topic',
+        date:'2026-08-01',event_count:2,hospital_count:2,document_count:3}],
+      total:hospital&&hospital!=='甲医院'?0:1,next_offset:null,older_months:[],
+      hospitals:[{name:'甲医院',event_count:1},{name:'乙医院',event_count:1}],
+      summary:{event_count:hospital&&hospital!=='甲医院'?0:1,hospital_count:2,pending_count:0}}});
+  });
+  await page.goto('https://hierarchy.test/#home');
+  await page.locator('#careHospital').selectOption('甲医院');
+  await expect(page.locator('#careHospital')).toHaveValue('甲医院');
+  await expect(page.locator('#careHospital option')).toHaveCount(3);
+  await page.locator('#careKind').selectOption('checkup');
+  await expect(page.locator('#careHospital')).toHaveValue('甲医院');
+  await expect(page.locator('#careHospital option')).toHaveCount(3);
+  await expect(page.locator('#careTimeline')).toContainText('全面体检');
+});
 test('big event searches all saved documents independently of archive cache',async({page})=>{
   await page.goto('https://hierarchy.test/#home');
   await page.locator('[data-care-topic="t1"]').first().click();
