@@ -2,7 +2,7 @@
    windows use the same reflow rules; navigation never shares a narrow rail. */
 .app-shell {
   display: grid;
-  grid-template-columns: 232px minmax(0, 1fr);
+  grid-template-columns: 260px minmax(0, 1fr);
   min-height: 100dvh;
 }
 .sidebar {
@@ -21,7 +21,11 @@
 .sidebar .nav-icon { display: block; width: 20px; height: 20px; }
 .sidebar .nav-btn.active::before { position: absolute; left: 0; top: 50%; margin: 0; transform: translateY(-50%); }
 .nav-btn span, .nav-btn em, .brand-cross { flex-shrink: 0; }
-.brand { display: flex; min-width: 0; }
+.brand { display: flex; min-width: 0; gap: 14px; padding: 0 4px 32px; }
+.brand-cross { width: 52px; height: 52px; font-size: 33px; border-radius: 12px; }
+.brand > div { min-width: 0; }
+.brand strong { font-size: 16px; }
+.brand small { font-size: 11px; letter-spacing: .08em; white-space: nowrap; }
 .sidebar-foot { display: block; }
 main { min-width: 0; padding: 0 clamp(20px, 3vw, 42px) 48px; }
 .topbar {
@@ -77,9 +81,9 @@ main { min-width: 0; padding: 0 clamp(20px, 3vw, 42px) 48px; }
     border-bottom: 1px solid var(--line);
   }
   .brand { grid-area: brand; padding: 0; gap: 10px; }
-  .brand small { display: none; }
+  .brand small { font-size: 10px; letter-spacing: .04em; }
   .brand strong { font-family: var(--font); font-size: 14px; }
-  .brand-cross { width: 30px; height: 30px; }
+  .brand-cross { width: 40px; height: 40px; font-size: 27px; }
   .sidebar nav { grid-area: nav; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
   .sidebar .nav-btn { padding: 8px 12px; }
   .sidebar .nav-btn.active:before { display: none; }
