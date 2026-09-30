@@ -227,8 +227,6 @@ class BatchExtractor:
                 if index + 1 < len(endpoints) and can_use_fallback(error):
                     continue
                 raise
-            break
-        try:
             if finish_reason == 'length':
                 current_limit = max_output_tokens or cfg.model_max_output_tokens
                 if (_expand_output and cfg.model_max_output_tokens > current_limit and
@@ -241,9 +239,17 @@ class BatchExtractor:
                 phase = {'source_transcription':'单页文字识别','batch_merge_plan':'资料分组规划','group_extraction':'单份资料提取'}.get(schema_name,'资料汇总')
                 raise ExtractionError(f'{phase}的模型输出被截断（输出上限 {current_limit} token），请提高输出长度配置或拆批识别',
                                       code='output_truncated', retryable=False)
-            if isinstance(raw, list):
-                raw = ''.join(x.get('text', '') for x in raw)
-            result = result_model.model_validate(json.loads(raw))
+            try:
+                if isinstance(raw, list):
+                    raw = ''.join(x.get('text', '') for x in raw)
+                result = result_model.model_validate(json.loads(raw))
+            except (ValueError, ValidationError, KeyError, TypeError, IndexError) as error:
+                logger.warning('Model output invalid schema=%s model=%s code=invalid_model_output',
+                               schema_name, endpoint.name)
+                if index + 1 < len(endpoints):
+                    continue
+                raise ExtractionError('模型输出结构不完整，请重试或拆批识别',
+                                      code='invalid_model_output', retryable=False) from error
             if isinstance(result, BatchExtraction):
                 result.reviewed = False
                 for group in result.groups:
@@ -252,8 +258,6 @@ class BatchExtractor:
                 for visit in result.encounters:
                     visit.existing_encounter_id = None
             return result
-        except (ValueError, ValidationError, KeyError, TypeError, IndexError) as error:
-            raise ExtractionError('模型输出结构不完整，请重试或拆批识别', code='invalid_model_output', retryable=False) from error
 
     async def _read_stream(self, response):
         fragments = []

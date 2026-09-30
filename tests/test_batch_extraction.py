@@ -218,6 +218,31 @@ async def test_rate_limited_primary_uses_backup_for_batch_requests():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('invalid_content', ['{broken', '{"sources":[{"source_id":"s1"}]}'])
+async def test_invalid_primary_structure_uses_backup_for_same_request(invalid_content):
+    from app.batch_schemas import SourceTranscriptionBatch
+
+    calls = []
+
+    def handler(request):
+        calls.append(request.url.host)
+        content = (invalid_content if request.url.host == 'primary.test' else
+                   json.dumps({'sources': [{'source_id': 's1', 'content': 'synthetic'}]}))
+        return httpx.Response(200, json={'choices': [{'finish_reason': 'stop', 'message': {'content': content}}]})
+
+    settings = Settings(_env_file=None, model_base_url='https://primary.test/v1',
+                        model_api_key='primary-key', model_name='primary-vision',
+                        model_fallback_base_url='https://backup.test/v1',
+                        model_fallback_api_key='backup-key', model_fallback_name='backup-vision')
+    result = await BatchExtractor(settings, httpx.MockTransport(handler))._request(
+        [{'type': 'text', 'text': 'synthetic'}], 'JSON',
+        result_model=SourceTranscriptionBatch, schema_name='source_transcription')
+
+    assert result.sources[0].content == 'synthetic'
+    assert calls == ['primary.test', 'backup.test']
+
+
+@pytest.mark.asyncio
 async def test_bad_primary_request_does_not_switch_to_backup():
     calls = []
 
