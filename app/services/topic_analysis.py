@@ -8,7 +8,7 @@ from uuid import UUID
 from pydantic import Field
 from sqlalchemy import select
 
-from app.config import get_settings
+from app.config import get_model_settings
 from app.models import (CareSuggestion, CareTopic, CareTopicEncounter, CareTopicExclusion,
                         Document, Encounter)
 from app.schemas import StrictModel
@@ -80,7 +80,7 @@ async def analyze_existing_topic(db, owner_id, topic: CareTopic) -> dict:
         'event_kind': event_by_id[doc.encounter_id].event_kind,
         'document_id': str(doc.id), 'source_text': source_excerpt(doc),
     } for doc in documents]}
-    assessment = await BatchExtractor(get_settings())._request(
+    assessment = await BatchExtractor(get_model_settings())._request(
         [{'type': 'text', 'text': json.dumps(context, ensure_ascii=False)}],
         TOPIC_PROMPT, result_model=TopicAssessment, schema_name='care_topic_assessment',
         max_output_tokens=2500)
