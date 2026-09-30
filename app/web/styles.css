@@ -93,11 +93,14 @@ main{padding:0 38px 64px}.topbar,.view{width:min(100%,1320px);margin-inline:auto
 .batch-review-dialog[open]{display:flex;flex-direction:column}
 .batch-review-dialog::backdrop{background:#14213d70;backdrop-filter:blur(3px)}
 .batch-review-dialog .dialog-head{flex:none;padding:15px 20px}.batch-review-dialog .dialog-head h3{font-family:var(--font);font-size:20px}
+.batch-partial-notice{flex:none;margin:0;padding:10px 20px;border-block:1px solid #eed9ad;background:#fff8e9;color:#674817;font-size:12px;line-height:1.5;overflow-wrap:anywhere}.batch-partial-notice[hidden]{display:none}
+.pill.warning{border-color:#eed9ad;background:#fff8e9;color:#8a5312}
 .batch-review-layout{flex:1;min-height:0;display:grid;grid-template-columns:200px minmax(260px,.95fr) minmax(330px,1.2fr);overflow:hidden}
 .batch-group-list{overflow:auto;min-height:0;background:#f8faff;border-right:1px solid var(--line);padding:12px}
 .batch-group-list>p{font-size:12px;color:var(--muted)}
 .review-group{display:grid;gap:5px;text-align:left;width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:12px;margin-bottom:9px;font:inherit;cursor:pointer}
 .review-group.active{border-color:var(--blue);background:var(--blue-2)}
+.review-group.needs-manual{border-color:#d9ab59}.review-group.needs-manual small{color:#8a5312;font-weight:700}
 .review-group span,.review-group small{font-size:11px;color:var(--muted)}.review-group strong{font-size:13px;overflow-wrap:anywhere}
 .review-issues,.unused-source{font-size:12px;overflow-wrap:anywhere;margin-top:15px}.review-issues p{color:#79562c;padding:7px;background:#fff9ed;border-radius:6px}
 .batch-source-column{display:flex;flex-direction:column;min-width:0;min-height:0;padding:14px;background:#f3f5f9;border-right:1px solid var(--line)}

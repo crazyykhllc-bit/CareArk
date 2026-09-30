@@ -3,6 +3,7 @@
   const ui = {files:[], selected:new Set(), groups:[], encounters:[], batch:null, busy:false, anchor:0, queue:[], timer:null};
   const labels={receiving:'等待上传完成并提交',queued:'等待识别',preprocessing:'正在整理文件',extracting:'视觉模型联合识别中',pending_confirmation:'等待人工核对',failed:'处理失败',archived:'已归档'};
   const esc=escapeHtml;
+  const manualDetailCount=batch=>(batch.payload?.groups||[]).filter(group=>(group.review_items||[]).some(item=>item.startsWith('自动提取失败：'))).length;
   ui.care={mode:null,name:null,topic_id:null,event_id:null};ui.intentKey=null;ui.careLocked=false;
   const uploadGrid=$('uploadForm').closest('.upload-grid');
   const entry=document.createElement('section');entry.id='uploadIntent';entry.className='panel upload-intent';
@@ -172,7 +173,7 @@
   function renderPending(){
     const drafts=ui.queue.filter(b=>b.status==='pending_confirmation');
     document.querySelectorAll('[data-batch-review]').forEach(el=>{if(el.closest('#draftList'))el.remove()});
-    if(drafts.length){$('draftList').querySelector('.empty')?.remove();$('draftList').insertAdjacentHTML('afterbegin',drafts.map(b=>`<article class="draft-card" tabindex="0" data-batch-review="${b.id}"><span class="pill green">批次核对</span><h4>${b.files.length} 个文件 · ${b.payload?.groups?.length||0} 个资料组</h4><p>核对原件与识别结果，确认后归档到所选事件</p></article>`).join(''))}
+    if(drafts.length){$('draftList').querySelector('.empty')?.remove();$('draftList').insertAdjacentHTML('afterbegin',drafts.map(b=>{const pending=manualDetailCount(b);return `<article class="draft-card" tabindex="0" data-batch-review="${b.id}"><span class="pill ${pending?'warning':'green'}">${pending?`${pending} 份需人工补全`:'批次核对'}</span><h4>${b.files.length} 个文件 · ${b.payload?.groups?.length||0} 个资料组</h4><p>${pending?'部分字段未能自动提取，原件和转写原文已保留，请逐份核对':'核对原件与识别结果，确认后归档到所选事件'}</p></article>`}).join(''))}
     const total=(state.drafts?.length||0)+drafts.length;$('pendingBadge').textContent=total;$('homePendingCount').textContent=total;
   }
   async function refresh(){

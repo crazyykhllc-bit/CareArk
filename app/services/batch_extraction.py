@@ -6,13 +6,16 @@ import logging
 import httpx
 from pydantic import ValidationError
 
-from app.batch_schemas import BatchExtraction, SourceTranscriptionBatch, BatchMergePlan, GroupDetailExtraction
+from app.batch_schemas import BatchExtraction, SourceTranscriptionBatch, BatchMergePlan, GroupDetailExtraction, validate_sources
 from app.services.batch_merge import validate_plan, assemble_result, invalid_plan
 from app.services.extraction import (ExtractionError, SYSTEM_PROMPT, strict_json_schema,
                                      model_http_error, model_endpoints, can_use_fallback, model_request_options)
 
 
 logger = logging.getLogger(__name__)
+
+DETAIL_REVIEW_NOTICE = ('自动提取失败：已保留这份资料的转写原文，但结构化字段尚未提取。'
+                        '请对照原件补全或核对后再归档。')
 
 BATCH_PROMPT = SYSTEM_PROMPT + '''
 这次输入是混合上传批次。每段图像/文字都有稳定来源 ID。
@@ -131,11 +134,16 @@ class BatchExtractor:
             '\n分段识别结果：' + json.dumps([part.model_dump(mode='json') for part in partials], ensure_ascii=False)
         )}]
         try:
-            return await self._with_retries(lambda: self._request(content, BATCH_MERGE_PROMPT))
+            result=await self._with_retries(lambda: self._request(content, BATCH_MERGE_PROMPT))
+            validate_sources(result,{source['id'] for source in sources})
+            return result
         except ExtractionError as error:
-            if error.code != 'output_truncated' or not sources:
+            if error.code not in {'output_truncated','invalid_model_output'} or not sources:
                 raise
-            logger.warning('Switching truncated batch merge to planned group extraction sources=%s', len(sources))
+            logger.warning('Switching invalid batch merge to planned group extraction sources=%s code=%s',len(sources),error.code)
+            return await self._merge_planned(sources, grouping, partials)
+        except ValueError:
+            logger.warning('Switching incomplete batch merge to planned group extraction sources=%s',len(sources))
             return await self._merge_planned(sources, grouping, partials)
 
     async def _merge_planned(self, sources, grouping, partials):
@@ -169,9 +177,37 @@ class BatchExtractor:
             detail_prompt=BATCH_PROMPT+\
                 '\n本次仅提取当前资料组的完整详细结果，不重新分组、不增加组外来源。只输出一个 ResultGroup。类型及全部 source_ids 必须与当前资料组一致。parsed_content 必须 null，服务器会附上该组完整转写原文；不得因省略 parsed_content 而省略检验结果、药品、金额或其他结构化明细。所有字段依据只可引用本组来源。'
             async with semaphore:
-                return await self._with_retries(lambda:self._request(detail_content,detail_prompt,result_model=GroupDetailExtraction,schema_name='group_extraction'))
+                try:
+                    detail=await self._with_retries(lambda:self._request(
+                        detail_content,detail_prompt,result_model=GroupDetailExtraction,
+                        schema_name='group_extraction'))
+                    if (detail.kind!=planned.kind or len(detail.source_ids)!=len(planned.source_ids)
+                            or set(detail.source_ids)!=set(planned.source_ids)):
+                        raise invalid_plan()
+                    return detail
+                except ExtractionError as error:
+                    # A single failed detail must not discard other groups or
+                    # the transcriptions already bound to their source images.
+                    logger.warning('Group detail needs manual review code=%s', error.code)
+                    return None
         details=await asyncio.gather(*(extract_detail(group) for group in plan.groups))
-        return assemble_result(plan,details,transcriptions,labels,source_ids)
+        failed=0
+        for index,(planned,detail) in enumerate(zip(plan.groups,details)):
+            if detail is not None:
+                continue
+            failed+=1
+            details[index]=GroupDetailExtraction(
+                id=planned.id,kind=planned.kind,source_ids=list(planned.source_ids),
+                encounter_id=planned.encounter_id,
+                document={'type':'其他医疗资料','title':f'待核对资料 {index+1}','parsed_content':None},
+                medications=[{'name':'待核对药品'}] if planned.kind=='medication' else [],
+                review_items=[DETAIL_REVIEW_NOTICE],
+            )
+        result=assemble_result(plan,details,transcriptions,labels,source_ids)
+        if failed:
+            result.review_items.append(
+                f'{failed} 份资料的详细字段自动提取失败；原件和转写原文已保留，请在核对页面逐份检查。')
+        return result
 
     async def _with_retries(self, operation):
         for attempt in range(self.settings.model_max_retries + 1):

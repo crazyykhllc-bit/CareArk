@@ -78,6 +78,20 @@ async def test_small_batch_merge_truncation_reuses_transcripts_and_switches_to_p
     assert [name for name,_ in calls]==['batch_extraction','batch_merge_plan','group_extraction','group_extraction','group_extraction']
 
 
+@pytest.mark.asyncio
+async def test_small_batch_invalid_merge_switches_to_bounded_plan():
+    calls=[]
+    normal=mock_handler(calls)
+    def handler(request):
+        body=json.loads(request.content)
+        if body['response_format']['json_schema']['name']=='batch_extraction':
+            return httpx.Response(200,json={'choices':[{'finish_reason':'stop','message':{'content':'{"groups":"invalid"}'}}]})
+        return normal(request)
+    result=await BatchExtractor(cfg(),httpx.MockTransport(handler)).extract_batch(sources(3),{})
+    assert {sid for group in result.groups for sid in group.source_ids}=={'s0','s1','s2'}
+    assert len(result.groups)==3
+
+
 @pytest.mark.parametrize('groups,encounters,grouping',[
     ([{'id':'g','kind':'document','source_ids':['s0'],'encounter_id':'unknown'}],[],{}),
     ([{'id':'g','kind':'document','source_ids':['outsider']}],[],{}),
@@ -92,7 +106,7 @@ def test_invalid_relationships_cannot_proceed(groups,encounters,grouping):
 
 
 @pytest.mark.asyncio
-async def test_detail_truncation_never_returns_partial_batch():
+async def test_detail_truncation_preserves_source_for_manual_review():
     calls=[]
     normal=mock_handler(calls)
     def handler(request):
@@ -100,8 +114,55 @@ async def test_detail_truncation_never_returns_partial_batch():
         if body['response_format']['json_schema']['name']=='group_extraction':
             return httpx.Response(200,json={'choices':[{'finish_reason':'length','message':{'content':'{}'}}]})
         return normal(request)
-    with pytest.raises(ExtractionError,match='单份资料提取'):
-        await BatchExtractor(cfg(),httpx.MockTransport(handler)).extract_batch(sources(),{})
+    result=await BatchExtractor(cfg(),httpx.MockTransport(handler)).extract_batch(sources(6),{})
+    assert len(result.groups)==6
+    assert {sid for group in result.groups for sid in group.source_ids}=={f's{i}' for i in range(6)}
+    assert all('自动提取失败' in ' '.join(group.review_items) for group in result.groups)
+    assert all('完整合成原文' in group.document.parsed_content for group in result.groups)
+    assert all(group.lab_results==[] and group.medications==[] for group in result.groups)
+
+
+@pytest.mark.asyncio
+async def test_one_malformed_detail_does_not_discard_other_extracted_groups():
+    calls=[]
+    normal=mock_handler(calls)
+    def handler(request):
+        body=json.loads(request.content)
+        if body['response_format']['json_schema']['name']=='group_extraction':
+            text=body['messages'][1]['content'][0]['text']
+            if '"source_ids": ["s1"]' in text:
+                return httpx.Response(200,json={'choices':[{'finish_reason':'stop','message':{'content':'{}'}}]})
+        return normal(request)
+    result=await BatchExtractor(cfg(),httpx.MockTransport(handler)).extract_batch(sources(6),{})
+    failed=next(group for group in result.groups if group.source_ids==['s1'])
+    successful=[group for group in result.groups if group.source_ids!=['s1']]
+    assert failed.document.type=='其他医疗资料'
+    assert '完整合成原文1' in failed.document.parsed_content
+    assert any('自动提取失败' in notice for notice in failed.review_items)
+    assert len(successful)==5
+    assert all(group.document.title=='合成记录' for group in successful)
+    assert all(not any('自动提取失败' in notice for notice in group.review_items) for group in successful)
+    assert any('1 份资料' in notice for notice in result.review_items)
+
+
+@pytest.mark.asyncio
+async def test_failed_medication_detail_stays_editable_as_one_unknown_medication():
+    calls=[]
+    normal=mock_handler(calls,manual=True)
+    def handler(request):
+        body=json.loads(request.content)
+        if body['response_format']['json_schema']['name']=='group_extraction':
+            plan=json.loads(body['messages'][1]['content'][0]['text'].split('当前资料组：',1)[1].split('\n',1)[0])
+            if plan['kind']=='medication':
+                return httpx.Response(200,json={'choices':[{'finish_reason':'stop','message':{'content':'{"id":1}'}}]})
+        return normal(request)
+    grouping={'groups':[{'id':'manual','kind':'medication','source_ids':['s0','s9','s19']}],'encounters':[]}
+    result=await BatchExtractor(cfg(),httpx.MockTransport(handler)).extract_batch(sources(),grouping)
+    drug=next(group for group in result.groups if group.kind=='medication')
+    assert drug.source_ids==['s0','s9','s19']
+    assert [item.name for item in drug.medications]==['待核对药品']
+    assert '完整合成原文19' in drug.document.parsed_content
+    assert any('自动提取失败' in notice for notice in drug.review_items)
 
 
 def test_assembly_retains_global_visit_and_field_evidence():

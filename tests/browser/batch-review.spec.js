@@ -200,12 +200,13 @@ test('different hospital originals do not show blocking validation errors',async
 });
 
 
-async function editableReview(page,careContext={mode:'small'},groupCount=1,reviewItems=[]){
+async function editableReview(page,careContext={mode:'small'},groupCount=1,reviewItems=[],failedIndex=null){
   const state={saves:0,confirmations:0,failSave:false};
   const batch={id:'close-test',status:'pending_confirmation',version:1,care_context:careContext,grouping:{},files:[],sources:[],
     payload:{groups:[{id:'g',kind:'document',source_ids:['s'],document:{type:'其他医疗资料',title:'合成报告',key_information:[],source_refs:[],details:{}},lab_results:[],medications:[],evidence:[],review_items:[]}],encounters:[],excluded_sources:[],reviewed:false}};
   for(let i=1;i<groupCount;i++)batch.payload.groups.push({...structuredClone(batch.payload.groups[0]),id:`g${i}`,source_ids:[`s${i}`],document:{...batch.payload.groups[0].document,title:`第 ${i+1} 份合成检验报告及核对资料`}});
   batch.payload.review_items=reviewItems;
+  if(failedIndex!==null)batch.payload.groups[failedIndex].review_items=['自动提取失败：请对照原件补全字段'];
   await page.route('**/api/batches/close-test/draft',route=>{
     if(route.request().method()==='PUT'){
       state.saves++;
@@ -219,6 +220,16 @@ async function editableReview(page,careContext={mode:'small'},groupCount=1,revie
   await page.evaluate(()=>window.batchReview.open('close-test'));
   return state;
 }
+
+test('incomplete extraction is prominent and names the affected document',async({page})=>{
+  await editableReview(page,{mode:'small'},2,[],1);
+  await expect(page.locator('#batchReviewPartialNotice')).toBeVisible();
+  await expect(page.locator('#batchReviewPartialNotice')).toContainText('1 份资料');
+  await expect(page.locator('.review-group').nth(0)).not.toContainText('需人工补全');
+  await expect(page.locator('.review-group').nth(1)).toContainText('需人工补全');
+  await page.locator('.review-group').nth(1).click();
+  await expect(page.locator('#batchReviewPartialNotice')).toContainText('对照原件');
+});
 
 test('closing an edited review offers continue, discard and save without archiving',async({page})=>{
   const state=await editableReview(page);
