@@ -12,7 +12,7 @@ import webbrowser
 from pathlib import Path
 
 
-DEFAULT_MODEL_CONFIG = """# 视觉识别需要自行填写支持图片输入的模型 API Key；修改后重启 CareArk。
+DEFAULT_MODEL_CONFIG = """# 视觉识别需要自行填写支持图片输入的模型 API Key；保存后刷新工作台页面即可生效。
 # 下面以 DeepSeek 为例；使用其他模型服务时，请同时修改基础地址、模型名称和 API Key。
 MODEL_PROVIDER=openai-compatible
 MODEL_BASE_URL=https://api.deepseek.com
@@ -187,7 +187,7 @@ def launch() -> None:
     tk.Button(buttons, text="模型设置", width=12,
               command=lambda: __import__("subprocess").Popen(["notepad.exe", str(data_dir / ".env")])).pack(side="left", padx=(0, 8))
     tk.Button(buttons, text="数据目录", width=12, command=lambda: os.startfile(data_dir)).pack(side="left")
-    tk.Label(window, text="首次使用请在浏览器中创建管理员账号；模型密钥填入“模型设置”后重启。",
+    tk.Label(window, text="首次使用请在浏览器中创建管理员账号；模型密钥填入“模型设置”后刷新网页。",
              font=("Microsoft YaHei UI", 9), fg="#667085", anchor="w").pack(fill="x", pady=(18, 0))
 
     def background() -> None:

@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Response
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.config import Settings, get_settings
+from app.config import Settings, get_model_settings
 from app.api import admin, archive, auth, drafts, export, medications, uploads, batches, encounters, metrics, overview, costs, test_sessions, care_history, care_hierarchy, profiles
 
 
@@ -38,7 +38,8 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     @app.get("/api/system/status")
-    def system_status(settings: Settings = Depends(get_settings)) -> dict[str, dict[str, bool]]:
+    def system_status(response: Response, settings: Settings = Depends(get_model_settings)) -> dict[str, dict[str, bool]]:
+        response.headers["Cache-Control"] = "no-store"
         return {"model": {
             "configured": bool(settings.model_api_key and settings.model_name),
             "fallback_configured": bool(settings.model_fallback_base_url and

@@ -2,7 +2,7 @@ import asyncio
 import os
 import socket
 
-from app.config import get_settings
+from app.config import get_model_settings, model_settings_changed
 from app.db import SessionLocal
 from app.services.extraction import OpenAICompatibleExtractor
 from app.services.jobs import JobProcessor
@@ -12,11 +12,17 @@ from app.services.batch_extraction import BatchExtractor
 
 
 async def run() -> None:
-    settings = get_settings()
-    processor = JobProcessor(SessionLocal, get_storage(), OpenAICompatibleExtractor(settings), settings)
-    batches = BatchProcessor(SessionLocal, get_storage(), BatchExtractor(settings), settings)
+    settings = get_model_settings()
+    storage = get_storage()
+    processor = JobProcessor(SessionLocal, storage, OpenAICompatibleExtractor(settings), settings)
+    batches = BatchProcessor(SessionLocal, storage, BatchExtractor(settings), settings)
     worker_id = f"{socket.gethostname()}-{os.getpid()}"
     while True:
+        latest = get_model_settings()
+        if model_settings_changed(settings, latest):
+            settings = latest
+            processor = JobProcessor(SessionLocal, storage, OpenAICompatibleExtractor(settings), settings)
+            batches = BatchProcessor(SessionLocal, storage, BatchExtractor(settings), settings)
         claimed = await batches.claim_next()
         if claimed:
             await batches.process(*claimed)

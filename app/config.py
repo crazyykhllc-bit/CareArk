@@ -56,3 +56,15 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def get_model_settings() -> Settings:
+    """Read model settings again so desktop edits apply without a restart."""
+    return Settings()
+
+
+def model_settings_changed(previous: Settings, current: Settings) -> bool:
+    return any(
+        getattr(previous, name) != getattr(current, name)
+        for name in Settings.model_fields if name.startswith("model_")
+    )

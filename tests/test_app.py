@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.config import Settings, get_settings
+from app.config import Settings, get_model_settings
 from app.main import create_app
 
 
@@ -15,7 +15,7 @@ def test_health_is_available_without_model_key():
 
 def test_model_status_reports_unconfigured():
     app = create_app()
-    app.dependency_overrides[get_settings] = lambda: Settings(
+    app.dependency_overrides[get_model_settings] = lambda: Settings(
         _env_file=None,
         model_api_key="",
         model_name="",
@@ -30,7 +30,7 @@ def test_model_status_reports_unconfigured():
 
 def test_model_status_reports_complete_backup_without_exposing_its_key():
     app = create_app()
-    app.dependency_overrides[get_settings] = lambda: Settings(
+    app.dependency_overrides[get_model_settings] = lambda: Settings(
         _env_file=None,
         model_api_key="primary-secret", model_name="primary-vision",
         model_fallback_base_url="https://backup.test/v1",
@@ -42,7 +42,22 @@ def test_model_status_reports_complete_backup_without_exposing_its_key():
 
 def test_model_status_second_backup_never_exposes_credentials():
     app=create_app()
-    app.dependency_overrides[get_settings]=lambda:Settings(_env_file=None,model_api_key='primary-secret',model_name='vision',model_fallback2_base_url='https://deep.test',model_fallback2_api_key='second-secret',model_fallback2_name='deepseek-flash')
+    app.dependency_overrides[get_model_settings]=lambda:Settings(_env_file=None,model_api_key='primary-secret',model_name='vision',model_fallback2_base_url='https://deep.test',model_fallback2_api_key='second-secret',model_fallback2_name='deepseek-flash')
     response=TestClient(app).get('/api/system/status')
     assert response.json()['model']['fallback2_configured'] is True
     assert 'second-secret' not in response.text
+
+
+def test_model_status_refreshes_after_env_file_changes(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv('MODEL_API_KEY', raising=False)
+    monkeypatch.delenv('MODEL_NAME', raising=False)
+    config = tmp_path / '.env'
+    config.write_text('MODEL_API_KEY=\nMODEL_NAME=vision-test\n', encoding='utf-8')
+    client = TestClient(create_app())
+
+    before = client.get('/api/system/status')
+    assert before.headers['cache-control'] == 'no-store'
+    assert before.json()['model']['configured'] is False
+    config.write_text('MODEL_API_KEY=example-key\nMODEL_NAME=vision-test\n', encoding='utf-8')
+    assert client.get('/api/system/status').json()['model']['configured'] is True

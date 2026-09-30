@@ -14,7 +14,7 @@
 
 脚本支持 `-Version v0.1.2` 指定已有的稳定版本、`-InstallRoot` 指定程序目录和 `-NoShortcut` 跳过快捷方式。使用这些参数时，可先下载 [install-windows.ps1](https://github.com/crazyykhllc-bit/CareArk/blob/main/scripts/install-windows.ps1) 并在 PowerShell 执行。移除程序时可删除对应版本目录及桌面快捷方式；不要删除 `%LOCALAPPDATA%\CareArk`，除非明确要删除档案。
 
-需要识别图片或扫描件时，点击“模型设置”，在 `.env` 的 `MODEL_API_KEY=` 后填写支持图片输入的模型密钥，保存并重启 CareArk。默认示例使用 DeepSeek；也可以同时修改 `MODEL_BASE_URL` 和 `MODEL_NAME` 来使用其他兼容服务。在线视觉识别会把待识别内容发送给所配置的模型服务商；没有密钥仍可打开工作台，但不能识别新资料。
+需要识别图片或扫描件时，点击“模型设置”，在 `.env` 的 `MODEL_API_KEY=` 后填写支持图片输入的模型密钥，保存后刷新工作台网页即可生效。默认示例使用 DeepSeek；也可以同时修改 `MODEL_BASE_URL` 和 `MODEL_NAME` 来使用其他兼容服务。在线视觉识别会把待识别内容发送给所配置的模型服务商；没有密钥仍可打开工作台，但不能识别新资料。
 
 **备份和更新：**先关闭 CareArk，再复制整个 `%LOCALAPPDATA%\CareArk` 文件夹，包含数据库、原件和设置。更新程序时解压新版 ZIP 并运行新的 EXE；数据目录仍是同一个。不要把数据目录、`.env` 或含真实资料的备份上传到 GitHub。
 
