@@ -64,9 +64,11 @@
   menu.id='batchContext'; menu.className='batch-context hidden'; menu.setAttribute('role','menu'); menu.innerHTML=controls;
   document.body.append(menu);
 
-  function markStatus(message,working=false){
+  function markStatus(message,working=false,fileCount=null){
     $('uploadProgress').classList.remove('hidden');
     $('uploadStatus').textContent=message;
+    if(fileCount!==null)$('uploadProgressLabel').textContent=`${fileCount} 个文件处理中`;
+    else if(!working)$('uploadProgressLabel').textContent='';
     $('uploadStatus').classList.toggle('processing',working);
     $('uploadProgressBar').parentElement.classList.toggle('indeterminate',working);
     $('uploadProgressBar').parentElement.removeAttribute('aria-valuenow');
@@ -187,7 +189,7 @@
         row?.insertAdjacentHTML('beforeend',` <button type="button" class="btn small" data-batch-cancel="${b.id}">取消任务</button>`);
       }
       renderPending();
-      if(!ui.busy){const active=ui.queue.find(b=>['queued','preprocessing','extracting'].includes(b.status));if(active)markStatus(labels[active.status],true);else if(!ui.files.length)markStatus(ui.queue.some(b=>b.status==='pending_confirmation')?'识别完成，请核对资料':'暂无正在识别的任务')}
+      if(!ui.busy){const active=ui.queue.find(b=>['queued','preprocessing','extracting'].includes(b.status));if(active)markStatus(labels[active.status],true,active.files.length);else if(!ui.files.length)markStatus(ui.queue.some(b=>b.status==='pending_confirmation')?'识别完成，请核对资料':'暂无正在识别的任务')}
     }catch(error){if(error.status!==401)toast(errorText(error))}
   }
   function reset(){for(const f of ui.files)if(f.url.startsWith('blob:'))URL.revokeObjectURL(f.url);ui.files=[];ui.groups=[];ui.encounters=[];ui.batch=null;ui.queue=[];ui.selected.clear();ui.care={mode:null,name:null,topic_id:null,event_id:null};ui.intentKey=null;ui.careLocked=false;draw();$('batchHistory').innerHTML='';$('uploadProgress').classList.add('hidden')}

@@ -19,6 +19,17 @@ test.beforeEach(async({page})=>{
 
 test.afterEach(async({page})=>expect(page.__errors).toEqual([]));
 
+test('active batch shows submitted file count instead of 0 of 0',async({page})=>{
+  const files=Array.from({length:10},(_,i)=>({id:`f${i}`}));
+  await page.route('https://archive.test/api/batches',route=>route.fulfill({json:{items:[
+    {id:'active-batch',status:'extracting',files,payload:null},
+  ]}}));
+  await page.locator('[data-view="upload"]').click();
+  await page.evaluate(()=>window.batches.refresh());
+  await expect(page.locator('#uploadProgressLabel')).toHaveText('10 个文件处理中');
+  await expect(page.locator('#uploadStatus')).toContainText('视觉模型联合识别中');
+});
+
 test('planner splits 45 files into 20, 20, 5 and keeps manual groups intact',async({page})=>{
   const planned=await page.evaluate(()=>{
     const files=Array.from({length:45},(_,i)=>({key:`f${i}`,size:1,uploaded:false}));
